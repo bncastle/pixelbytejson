@@ -1,0 +1,20 @@
+{
+    "name": "Freedom",
+    "age": 32,
+    "timing": 32.400001525878909,
+    "star" : "\u2605",
+    "animals": [
+        "tortiose",
+        "cat",
+        "dog",
+        "mouse",
+        "hampster"
+    ],
+    "bounds": {
+        "x": 21.0,
+        "y": 45.0,
+        "width": 45.0,
+        "height": 90.0
+    },
+    "turkey" : "\uEFDF"
+}
