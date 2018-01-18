@@ -18,9 +18,9 @@
         public override string ToString()
         {
             if (!string.IsNullOrEmpty(Lexeme))
-                return string.Format("[{0}:{1}] {2} = {3}", Line, Column, Kind, Lexeme);
+                return string.Format("[{0}:{1}] {2} = {3}", Line, Column, Kind.Actual(), Lexeme);
             else
-                return string.Format("[{0}:{1}] {2} ", Line, Column, Kind);
+                return string.Format("[{0}:{1}] {2} ", Line, Column, Kind.Actual());
         }
     }
 }
