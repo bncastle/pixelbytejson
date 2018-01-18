@@ -6,39 +6,8 @@ using System.Text.RegularExpressions;
 
 namespace Pixelbyte.JsonUnity
 {
-    class JSONTokenizer
+    internal class JSONTokenizer
     {
-        static void Main()
-        {
-            JSONTokenizer tok = new JSONTokenizer();
-
-            //Pull in the json text
-            string testJson = string.Empty;
-            using (var sr = new StreamReader(@"..\..\TestClass.json"))
-            {
-                testJson = sr.ReadToEnd();
-            }
-
-            tok.Parse(testJson);
-
-            if (tok.IsError)
-            {
-                foreach (var item in tok.errors)
-                {
-                    Console.WriteLine(item);
-                }
-            }
-            else
-            {
-                foreach (var item in tok.tokens)
-                {
-                    Console.WriteLine(item.ToString());
-                }
-            }
-
-            Console.WriteLine(Environment.CurrentDirectory);
-        }
-
         //Matches a properly-formatted json number (except taht it allows multiple '.')
         static Regex jsonNumMatcher = new Regex(@"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$", RegexOptions.Compiled);
         //Matches a 4-digit HEX number
@@ -68,14 +37,15 @@ namespace Pixelbyte.JsonUnity
         public List<string> errors;
 
         public List<Token> tokens;
+
         public bool IsError { get; private set; }
 
         public JSONTokenizer() { tokens = new List<Token>(); errors = new List<string>(); }
 
-        public void Parse(string json)
+        public void Tokenize(string json)
         {
             if (string.IsNullOrEmpty(json)) throw new ArgumentNullException("json string cannot be null or empty!");
-            try  
+            try
             {
                 this.json = json;
                 errors.Clear();
@@ -135,7 +105,7 @@ namespace Pixelbyte.JsonUnity
                     case '"':
                         var str = ReadString();
                         if (!string.IsNullOrEmpty(str))
-                            tokens.Add(new Token(TokenType.DoubleQuote, currentLine, currentColumn, str));
+                            tokens.Add(new Token(TokenType.String, currentLine, currentColumn, str));
                         //LogError("Illegal null or empty string", currentLine, currentColumn);
                         break;
                     default:
@@ -150,6 +120,10 @@ namespace Pixelbyte.JsonUnity
                         {
                             if (val.CountChar('.') > 1 || !jsonNumMatcher.IsMatch(val))
                                 LogError("Malformed number: " + val, currentLine, currentColumn);
+
+                            //if (val.IndexOf('.') == -1)
+                            //    tokens.Add(new Token(TokenType.Integer, currentLine, currentColumn, val));
+                            //else
                             tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val));
                         }
                         else

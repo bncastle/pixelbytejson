@@ -17,7 +17,10 @@
 
         public override string ToString()
         {
-            return string.Format("{0} [{1}:{2}] {3}", Kind, Line, Column, Lexeme);
+            if (!string.IsNullOrEmpty(Lexeme))
+                return string.Format("[{0}:{1}] {2} = {3}", Line, Column, Kind, Lexeme);
+            else
+                return string.Format("[{0}:{1}] {2} ", Line, Column, Kind);
         }
     }
 }
