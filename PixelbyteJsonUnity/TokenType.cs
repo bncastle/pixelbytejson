@@ -11,7 +11,7 @@ namespace Pixelbyte.JsonUnity
 
         //Single-Character Tokens
         OpenCurly = 0x001,
-        ClosedCurly = 0x002,
+        CloseCurly = 0x002,
         OpenBracket = 0x004,
         CloseBracket = 0x008,
         Colon = 0x010,
@@ -34,7 +34,7 @@ namespace Pixelbyte.JsonUnity
         {
             {TokenType.None, "none" },
             {TokenType.OpenCurly, "'{'" },
-            {TokenType.ClosedCurly, "'}'" },
+            {TokenType.CloseCurly, "'}'" },
             {TokenType.OpenBracket, "'['" },
             {TokenType.CloseBracket, "']'" },
             {TokenType.Colon, "':'" },

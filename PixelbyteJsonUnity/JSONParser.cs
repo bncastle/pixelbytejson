@@ -11,7 +11,7 @@ namespace Pixelbyte.JsonUnity
         public string name;
         public List<JSONPair> pairs;
 
-        public JSONObject(string name)
+        public JSONObject(string name = null)
         {
             this.name = name;
             pairs = new List<JSONPair>();
@@ -62,10 +62,6 @@ namespace Pixelbyte.JsonUnity
     /// </summary>
     public class JSONParser
     {
-        const byte EMPTY = 0;
-        const byte INARRAY = 1;
-        const byte INOBJECT = 2;
-
         static void Main()
         {
             //Pull in the json text
@@ -80,17 +76,8 @@ namespace Pixelbyte.JsonUnity
             //Console.WriteLine(Environment.CurrentDirectory);
         }
 
-        public List<JSONObject> objects;
-
         JSONTokenizer tokenizer;
         List<string> errors;
-
-        //Tells us if we are currently in an object or an array
-        Stack<byte> depthStack;
-        /// <summary>
-        /// Tells us if the next expected token should be a value
-        /// </summary>
-        bool shouldBeValue;
 
         public bool IsTokenizerError { get { return tokenizer.IsError; } }
         public List<string> TokenizerErrors { get { return tokenizer.errors; } }
@@ -98,20 +85,6 @@ namespace Pixelbyte.JsonUnity
         public bool IsParserError { get; private set; }
 
         int tokenIndex = 0;
-
-        /// <summary>
-        /// Gets the next available token and advances to the next one
-        /// </summary>
-        Token NextToken
-        {
-            get
-            {
-                if (tokenizer.tokens.Count == 0 || tokenIndex >= tokenizer.tokens.Count) return null;
-                var tok = tokenizer.tokens[tokenIndex];
-                tokenIndex++;
-                return tok;
-            }
-        }
 
         /// <summary>
         /// Peeks at the next availabel token without consuming it
@@ -132,21 +105,25 @@ namespace Pixelbyte.JsonUnity
         {
             get
             {
-                if (tokenizer.tokens.Count == 0 || tokenIndex == 0) return null;
-                return tokenizer.tokens[tokenIndex];
+                if (tokenizer.tokens.Count == 0 || tokenIndex < 2) return null;
+                return tokenizer.tokens[tokenIndex - 2];
             }
         }
 
-        bool InArray { get { return depthStack.Count > 0 && depthStack.Peek() == INARRAY; } }
-        bool InObject { get { return depthStack.Count > 0 && depthStack.Peek() == INOBJECT; } }
+        TokenType PreviousTokenType
+        {
+            get
+            {
+                if (PreviousToken == null) return TokenType.None;
+                return PreviousToken.Kind;
+            }
+        }
 
         private JSONParser(JSONTokenizer tok)
         {
             tokenizer = tok;
             IsParserError = false;
             errors = new List<string>();
-            objects = new List<JSONObject>();
-            depthStack = new Stack<byte>(16);
         }
 
         public static JSONParser Parse(string json)
@@ -175,143 +152,152 @@ namespace Pixelbyte.JsonUnity
             return jp;
         }
 
-        void DepthPushObject() { depthStack.Push(INOBJECT); }
-        void DepthPushArray() { depthStack.Push(INARRAY); }
-        byte DepthPop() { if (depthStack.Count == 0) return EMPTY; else return depthStack.Pop(); }
-
-        //object ParseValue()
-        //{
-        //    if()
-        //}
-
-        void Parse()
+        /// <summary>
+        /// Gets the next available token and advances to the next one
+        /// </summary>
+        Token NextToken()
         {
-            JSONObject jsonObj = null;
-            JSONPair jsonPair = null;
-            depthStack.Clear();
+            if (tokenizer.tokens.Count == 0 || tokenIndex >= tokenizer.tokens.Count) return null;
+            var tok = tokenizer.tokens[tokenIndex];
+            tokenIndex++;
+            return tok;
+        }
 
-            TokenType expectNext = TokenType.OpenCurly | TokenType.OpenBracket;
-
-            if (tokenizer.tokens.Count == 0)
+        JSONPair ParsePair()
+        {
+            if(PeekToken == null || PeekToken.Kind != TokenType.String)
             {
-                LogError("No JSON found!");
-                return;
+                LogError("Expected a string", PeekToken, false);
+                return null;
+            }
+            var pairName = NextToken().Lexeme;
+            if(PeekToken.Kind != TokenType.Colon)
+            {
+                LogError("Expected a ':'", PeekToken, false);
+                return null;
+            }
+
+            //Eat the :
+            NextToken();
+
+            if (PeekToken.Kind.Contains(TokenType.Value))
+            {
+                var token = NextToken();
+                return new JSONPair(pairName, token.Lexeme);
+            }
+            else if(PeekToken.Kind == TokenType.OpenCurly)
+            {
+                return new JSONPair(pairName, ParseObject());
+            }
+            else if(PeekToken.Kind == TokenType.OpenBracket)
+            {
+                return new JSONPair(pairName, ParseArray());
             }
             else
             {
-                //Ensure that the JSON is valid
-                var firstTok = tokenizer.tokens[0];
-                if (firstTok.Kind != TokenType.OpenBracket && firstTok.Kind != TokenType.OpenCurly)
-                {
-                    LogError("JSON must start with an array or an object!", firstTok);
-                    return;
-                }
+                LogError("Unexpected token:", PeekToken);
+                return null;
             }
+            
+        }
 
-            var prevKind = TokenType.None;
-            for (int i = 0; i < tokenizer.tokens.Count; i++)
+        JSONObject ParseObject()
+        {
+            JSONObject obj = new JSONObject();
+
+            //Eat the OpenCurly Object
+            NextToken();
+
+            while (PeekToken != null)
             {
-                var token = tokenizer.tokens[i];
-                var kind = token.Kind;
-
-                //Console.WriteLine(token.ToString());
-
-                if (kind.IsExpected(expectNext))
+                if(PeekToken.Kind != TokenType.String)
                 {
-                    switch (kind)
-                    {
-                        case TokenType.None:
-                            break;
-                        case TokenType.OpenCurly:
-                            DepthPushObject();
-                            expectNext = TokenType.String;
-                            break;
-                        case TokenType.ClosedCurly:
-                            if (!InObject)
-                            {
-                                LogError("Mismatched closing '}'", token);
-                                return;
-                            }
-                            DepthPop();
-                            expectNext = TokenType.None;
-                            break;
-                        case TokenType.OpenBracket:
-                            DepthPushArray();
-                            expectNext = TokenType.Value;
-                            break;
-                        case TokenType.CloseBracket:
-                            if (!InArray)
-                            {
-                                LogError("Mismatched closing ']'", token);
-                                return;
-                            }
-                            DepthPop();
-                            expectNext = TokenType.Comma;
-
-                            //Also if we're in an object or an array, we could expect the close of those as well
-                            if (InObject) expectNext |= TokenType.ClosedCurly;
-                            else if (InArray) expectNext |= TokenType.CloseBracket;
-
-                            break;
-                        case TokenType.Colon:
-                            //Any value can proceeed a colon
-                            expectNext = TokenType.Value | TokenType.OpenBracket | TokenType.OpenCurly;
-                            break;
-                        case TokenType.Comma:
-                            expectNext = TokenType.Value;
-                            if (InArray)
-                                expectNext |= TokenType.OpenCurly | TokenType.OpenBracket;
-                            break;
-                        case TokenType.String:
-                            if (InArray)
-                                expectNext = TokenType.Comma | TokenType.CloseBracket;
-                            else if (InObject)
-                            {
-                                if (prevKind == TokenType.Colon)
-                                    expectNext = TokenType.Comma | TokenType.ClosedCurly;
-                                else
-                                    expectNext = TokenType.Comma | TokenType.Colon | TokenType.OpenBracket | TokenType.OpenCurly | TokenType.ClosedCurly;
-                            }
-                            else
-                                LogError("Unexpected vaue!", token, false);
-                            break;
-                        case TokenType.Number:
-                        case TokenType.True:
-                        case TokenType.False:
-                        case TokenType.Null:
-                            expectNext = TokenType.Comma;
-                            if (InArray)
-                                expectNext |= TokenType.CloseBracket;
-                            else if (InObject)
-                                expectNext |= TokenType.ClosedCurly;
-
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                else
-                {
-                    LogError("Expected: " + expectNext.ListActual(), token, false);
-                    break;
+                    LogError("Expected a string!", PeekToken, false);
+                    return null;
                 }
 
-                prevKind = kind;
+                var pair = ParsePair();
+                if (pair == null) break;
+                else obj.Add(pair);
+
+                if (PeekToken == null || PeekToken.Kind == TokenType.CloseCurly) break;
+
+                if (PeekToken.Kind != TokenType.Comma)
+                {
+                    LogError("Expected a ,", PeekToken, false);
+                }
+                
+                NextToken();
             }
 
-            if (IsParserError) return;
+            if (PeekToken == null)
+            {
+                LogError("Expected '}'");
+                return null;
+            }
+            else
+                //Eat the closing '}'
+                NextToken();
+            return obj;
+        }
 
-            //After Parsing is complete, both the object and array depth should be 0
-            if (InObject)
+        List<object> ParseArray()
+        {
+            //eat the opening '['
+            NextToken();
+
+            List<object> array = new List<object>();
+            while(PeekToken != null)
             {
-                var lastToken = tokenizer.tokens[tokenizer.tokens.Count - 1];
-                LogError(" Missing '}'!", lastToken, false);
+                if (PeekToken.Kind.Contains(TokenType.Value))
+                {
+                    array.Add(PeekToken.Lexeme);
+                }
+                else if(PeekToken.Kind == TokenType.OpenBracket)
+                {
+                    array.Add(ParseArray());
+                }
+                else if(PeekToken.Kind == TokenType.OpenCurly)
+                {
+                    array.Add(ParseObject());
+                }
+                else if(PeekToken.Kind == TokenType.Colon)
+                {
+                    LogError("Unexpected ':'", PeekToken, false);
+                }
+
+                if (PeekToken == null || PeekToken.Kind == TokenType.CloseBracket) break;
+
+                NextToken();
+
+                if (PeekToken.Kind != TokenType.Comma)
+                {
+                    LogError("Expected a ,", PeekToken, false);
+                }
+                
+                NextToken();
             }
-            else if (InArray)
+
+            if (PeekToken == null)
             {
-                var lastToken = tokenizer.tokens[tokenizer.tokens.Count - 1];
-                LogError("Missing ']'!", lastToken, false);
+                LogError("Expected ']'");
+                return null;
             }
+            else
+                //Eat the closing ']'
+                NextToken();
+            return array;
+        }
+
+        void Parse()
+        {
+            JSONObject obj;
+            List<object> array;
+            if (PeekToken.Kind == TokenType.OpenCurly)
+                obj = ParseObject();
+            else if (PeekToken.Kind == TokenType.OpenBracket)
+                array = ParseArray();
+            Console.WriteLine("ok");
         }
 
         void LogError(string text, Token tok = null, bool showtoken = true)

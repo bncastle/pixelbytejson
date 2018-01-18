@@ -92,7 +92,7 @@ namespace Pixelbyte.JsonUnity
                         break;
                     case '}':
                         NextChar();
-                        tokens.Add(new Token(TokenType.ClosedCurly, currentLine, currentColumn, String.Empty));
+                        tokens.Add(new Token(TokenType.CloseCurly, currentLine, currentColumn, String.Empty));
                         break;
                     case ':':
                         NextChar();
@@ -111,11 +111,11 @@ namespace Pixelbyte.JsonUnity
                     default:
                         var val = ReadValue();
                         if (val == "false")
-                            tokens.Add(new Token(TokenType.False, currentLine, currentColumn, String.Empty));
+                            tokens.Add(new Token(TokenType.False, currentLine, currentColumn, "false"));
                         else if (val == "true")
-                            tokens.Add(new Token(TokenType.True, currentLine, currentColumn, String.Empty));
+                            tokens.Add(new Token(TokenType.True, currentLine, currentColumn, "true"));
                         else if (val == "null")
-                            tokens.Add(new Token(TokenType.Null, currentLine, currentColumn, String.Empty));
+                            tokens.Add(new Token(TokenType.Null, currentLine, currentColumn, "null"));
                         else if (!string.IsNullOrEmpty(val) && (char.IsDigit(val[0]) || val[0] == '-'))
                         {
                             if (val.CountChar('.') > 1 || !jsonNumMatcher.IsMatch(val))

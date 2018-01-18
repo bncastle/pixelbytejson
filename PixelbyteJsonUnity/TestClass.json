@@ -4,6 +4,7 @@
     "start" : true,
     "timing": 32.400001525878909,
     "star": "\u2605",
+    "hey" : {"tortuga" : false},
     "animals": [
         "tortiose",
         "cat",
