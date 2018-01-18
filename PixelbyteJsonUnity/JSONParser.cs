@@ -87,7 +87,7 @@ namespace Pixelbyte.JsonUnity
         int tokenIndex = 0;
 
         /// <summary>
-        /// Peeks at the next availabel token without consuming it
+        /// Peeks at the next available token without consuming it
         /// </summary>
         Token PeekToken
         {
@@ -101,23 +101,23 @@ namespace Pixelbyte.JsonUnity
         /// <summary>
         /// Retrieves the previous token or null if there is not one
         /// </summary>
-        Token PreviousToken
-        {
-            get
-            {
-                if (tokenizer.tokens.Count == 0 || tokenIndex < 2) return null;
-                return tokenizer.tokens[tokenIndex - 2];
-            }
-        }
+        //Token PreviousToken
+        //{
+        //    get
+        //    {
+        //        if (tokenizer.tokens.Count == 0 || tokenIndex < 2) return null;
+        //        return tokenizer.tokens[tokenIndex - 2];
+        //    }
+        //}
 
-        TokenType PreviousTokenType
-        {
-            get
-            {
-                if (PreviousToken == null) return TokenType.None;
-                return PreviousToken.Kind;
-            }
-        }
+        //TokenType PreviousTokenType
+        //{
+        //    get
+        //    {
+        //        if (PreviousToken == null) return TokenType.None;
+        //        return PreviousToken.Kind;
+        //    }
+        //}
 
         private JSONParser(JSONTokenizer tok)
         {
@@ -146,6 +146,13 @@ namespace Pixelbyte.JsonUnity
                     {
                         Console.WriteLine(err);
                     }
+                }
+            }
+            else
+            {
+                foreach (var err in jp.tokenizer.errors)
+                {
+                    Console.WriteLine(err);
                 }
             }
 

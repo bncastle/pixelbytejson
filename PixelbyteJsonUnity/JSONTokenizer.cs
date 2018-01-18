@@ -129,6 +129,8 @@ namespace Pixelbyte.JsonUnity
                         else
                         {
                             LogError(string.Format("Unexpected unquoted string: {0}", val), currentLine, currentColumn);
+                            //If there is a quote at the end of this, just eat it
+                            if (Peek() == '"') NextChar();
                             //LogError("Supported unquoted strings: true, false, null");
                         }
                         break;
@@ -289,7 +291,8 @@ namespace Pixelbyte.JsonUnity
                         }
                     }
                 }
-                else if (c == '"')
+                //A newline ends the deal too
+                else if (c == '"'|| c == '\r' || c == '\n')
                     break;
                 else
                 {

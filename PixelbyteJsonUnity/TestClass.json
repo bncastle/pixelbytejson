@@ -10,7 +10,7 @@
         "cat",
         "dog",
         "mouse",
-        "hampster",
+        "hampster,
         {"faith" : "hope"}
     ],
     "bounds": {
