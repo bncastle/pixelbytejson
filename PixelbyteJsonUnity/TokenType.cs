@@ -18,14 +18,16 @@ namespace Pixelbyte.JsonUnity
         Comma = 0x020,
 
         //Value types
-        String = 0x040,
-        Number = 0x080,
-        True = 0x100,
-        False = 0x200,
-        Null = 0x400,
+        String  = 0x040,
+        //JSON only has number but I've split them up
+        Number  = 0x080,
+        //Integer = 0x100,
+        True    = 0x200,
+        False   = 0x400,
+        Null    = 0x800,
 
         //Extras not used in the Tokenizer
-        Value = 0x7C0
+        Value = 0xEC0
     }
 
     internal static class TokenTypeExtensions

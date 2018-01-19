@@ -73,11 +73,36 @@ namespace Pixelbyte.JsonUnity
 
             var jparser = Parse(testJson);
 
+            //Show any Tokenizer errors
+            if (jparser.IsTokenizerError)
+            {
+                foreach (var err in jparser.TokenizerErrors)
+                {
+                    Console.WriteLine(err);
+                }
+            }
+            else if (jparser.IsParserError)
+            {
+                foreach (var err in jparser.ParserErrors)
+                {
+                    Console.WriteLine(err);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Success");
+            }
+
             //Console.WriteLine(Environment.CurrentDirectory);
         }
 
         JSONTokenizer tokenizer;
         List<string> errors;
+
+        //This Parsed result, if no errors, will either be
+        //a JsonObject, or an array
+        public JSONObject rootObject;
+        public List<object> rootArray;
 
         public bool IsTokenizerError { get { return tokenizer.IsError; } }
         public List<string> TokenizerErrors { get { return tokenizer.errors; } }
@@ -131,31 +156,11 @@ namespace Pixelbyte.JsonUnity
             JSONTokenizer tok = new JSONTokenizer();
             JSONParser jp = new JSONParser(tok);
 
-            //1st tokenize
             tok.Tokenize(json);
             if (!tok.IsError)
             {
-                //foreach (var t in tok.tokens)
-                //    Console.WriteLine(t.ToString());
-                //Now parse
                 jp.Parse();
-
-                if (jp.IsParserError)
-                {
-                    foreach (var err in jp.errors)
-                    {
-                        Console.WriteLine(err);
-                    }
-                }
             }
-            else
-            {
-                foreach (var err in jp.tokenizer.errors)
-                {
-                    Console.WriteLine(err);
-                }
-            }
-
             return jp;
         }
 
@@ -172,13 +177,13 @@ namespace Pixelbyte.JsonUnity
 
         JSONPair ParsePair()
         {
-            if(PeekToken == null || PeekToken.Kind != TokenType.String)
+            if (PeekToken == null || PeekToken.Kind != TokenType.String)
             {
                 LogError("Expected a string", PeekToken, false);
                 return null;
             }
             var pairName = NextToken().Lexeme;
-            if(PeekToken.Kind != TokenType.Colon)
+            if (PeekToken.Kind != TokenType.Colon)
             {
                 LogError("Expected a ':'", PeekToken, false);
                 return null;
@@ -190,13 +195,29 @@ namespace Pixelbyte.JsonUnity
             if (PeekToken.Kind.Contains(TokenType.Value))
             {
                 var token = NextToken();
-                return new JSONPair(pairName, token.Lexeme);
+                switch (token.Kind)
+                {
+                    case TokenType.String:
+                        return new JSONPair(pairName, token.Lexeme);
+                    case TokenType.Number:
+                        //the tokenizer's already validated that this is a number so,
+                        return new JSONPair(pairName, double.Parse(token.Lexeme));
+                    case TokenType.True:
+                        return new JSONPair(pairName, true);
+                    case TokenType.False:
+                        return new JSONPair(pairName, false);
+                    case TokenType.Null:
+                        return new JSONPair(pairName, null);
+                    default:
+                        LogError("Unexpected value!", token, false);
+                        return null;
+                }
             }
-            else if(PeekToken.Kind == TokenType.OpenCurly)
+            else if (PeekToken.Kind == TokenType.OpenCurly)
             {
                 return new JSONPair(pairName, ParseObject());
             }
-            else if(PeekToken.Kind == TokenType.OpenBracket)
+            else if (PeekToken.Kind == TokenType.OpenBracket)
             {
                 return new JSONPair(pairName, ParseArray());
             }
@@ -205,7 +226,7 @@ namespace Pixelbyte.JsonUnity
                 LogError("Unexpected token:", PeekToken);
                 return null;
             }
-            
+
         }
 
         JSONObject ParseObject()
@@ -217,7 +238,7 @@ namespace Pixelbyte.JsonUnity
 
             while (PeekToken != null)
             {
-                if(PeekToken.Kind != TokenType.String)
+                if (PeekToken.Kind != TokenType.String)
                 {
                     LogError("Expected a string!", PeekToken, false);
                     return null;
@@ -233,7 +254,7 @@ namespace Pixelbyte.JsonUnity
                 {
                     LogError("Expected a ,", PeekToken, false);
                 }
-                
+
                 NextToken();
             }
 
@@ -254,21 +275,21 @@ namespace Pixelbyte.JsonUnity
             NextToken();
 
             List<object> array = new List<object>();
-            while(PeekToken != null)
+            while (PeekToken != null)
             {
                 if (PeekToken.Kind.Contains(TokenType.Value))
                 {
                     array.Add(PeekToken.Lexeme);
                 }
-                else if(PeekToken.Kind == TokenType.OpenBracket)
+                else if (PeekToken.Kind == TokenType.OpenBracket)
                 {
                     array.Add(ParseArray());
                 }
-                else if(PeekToken.Kind == TokenType.OpenCurly)
+                else if (PeekToken.Kind == TokenType.OpenCurly)
                 {
                     array.Add(ParseObject());
                 }
-                else if(PeekToken.Kind == TokenType.Colon)
+                else if (PeekToken.Kind == TokenType.Colon)
                 {
                     LogError("Unexpected ':'", PeekToken, false);
                 }
@@ -281,7 +302,7 @@ namespace Pixelbyte.JsonUnity
                 {
                     LogError("Expected a ,", PeekToken, false);
                 }
-                
+
                 NextToken();
             }
 
@@ -298,13 +319,10 @@ namespace Pixelbyte.JsonUnity
 
         void Parse()
         {
-            JSONObject obj;
-            List<object> array;
             if (PeekToken.Kind == TokenType.OpenCurly)
-                obj = ParseObject();
+                rootObject = ParseObject();
             else if (PeekToken.Kind == TokenType.OpenBracket)
-                array = ParseArray();
-            Console.WriteLine("ok");
+                rootArray = ParseArray();
         }
 
         void LogError(string text, Token tok = null, bool showtoken = true)

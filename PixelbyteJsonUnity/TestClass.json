@@ -4,13 +4,14 @@
     "start" : true,
     "timing": 32.400001525878909,
     "star": "\u2605",
+    "megs" : null,
     "hey" : {"tortuga" : false},
     "animals": [
         "tortiose",
         "cat",
         "dog",
         "mouse",
-        "hampster,
+        "hampster",
         {"faith" : "hope"}
     ],
     "bounds": {
