@@ -96,11 +96,11 @@ namespace Pixelbyte.JsonUnity
             }
         }
 
-        static T Deserialize<T>(JSONObject jsonObj)
+        static object Deserialize(JSONObject jsonObj, Type type)
         {
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
-            var obj = Activator.CreateInstance<T>();
+            var obj = Activator.CreateInstance(type);
 
             var fieldInfos = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
@@ -119,16 +119,22 @@ namespace Pixelbyte.JsonUnity
                     else if (fi.FieldType == typeof(Single))
                         fi.SetValue(obj, Convert.ToSingle(item.value));
                     //https://stackoverflow.com/questions/2604743/setting-generic-type-at-runtime
-                    else if (item.value is JSONObject) 
-                        Console.WriteLine("ll");
-                    //Deserialize < fi.FieldType > (item.value);
-                        //fi.SetValue(obj, Deserialize < fi.FieldType> (item.value));
+                    else if (item.value is JSONObject)
+                        fi.SetValue(obj, Deserialize(item.value as JSONObject, fi.FieldType));
                     else
                         fi.SetValue(obj, item.value);
                 }
             }
 
             return obj;
+        }
+
+        static T Deserialize<T>(JSONObject jsonObj)
+        {
+            if (jsonObj == null) throw new ArgumentNullException("jsonObj");
+
+            var obj = Deserialize(jsonObj, typeof(T));
+            return (T)obj;
         }
     }
 }

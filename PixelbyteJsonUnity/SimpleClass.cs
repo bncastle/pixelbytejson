@@ -19,7 +19,7 @@
         public float percentExtinct;
         public override string ToString()
         {
-            return string.Format("Animal{0} Extinction: {1}", name, percentExtinct);
+            return string.Format("Animal: {0} Extinction: {1}", name, percentExtinct);
         }
     }
     internal class LessSimpleClass
