@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PixelbyteJsonUnity", "PixelbyteJsonUnity\PixelbyteJsonUnity.csproj", "{B433F4D1-5C0C-4B0D-B044-9A016E255D72}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{7810C7CB-7077-4BE4-8496-CB60E18B137C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTest", "ConsoleTest\ConsoleTest.csproj", "{24DFB84F-78BC-48FB-9ADC-37AD55E204A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{B433F4D1-5C0C-4B0D-B044-9A016E255D72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B433F4D1-5C0C-4B0D-B044-9A016E255D72}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B433F4D1-5C0C-4B0D-B044-9A016E255D72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7810C7CB-7077-4BE4-8496-CB60E18B137C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7810C7CB-7077-4BE4-8496-CB60E18B137C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7810C7CB-7077-4BE4-8496-CB60E18B137C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7810C7CB-7077-4BE4-8496-CB60E18B137C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24DFB84F-78BC-48FB-9ADC-37AD55E204A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24DFB84F-78BC-48FB-9ADC-37AD55E204A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24DFB84F-78BC-48FB-9ADC-37AD55E204A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24DFB84F-78BC-48FB-9ADC-37AD55E204A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -4,7 +4,7 @@ using System.Reflection;
 namespace Pixelbyte.JsonUnity
 {
     // Define other methods and classes here
-    static class Seroz
+    public static class Seroz
     {
         static bool IsPublic(FieldInfo field) { return field.IsPublic; }
         static bool IsPrivate(FieldInfo field) { return field.IsPrivate; }
@@ -73,13 +73,13 @@ namespace Pixelbyte.JsonUnity
         public static T Deserialize<T>(string json)
         {
             var parser = JSONParser.Parse(json);
-            if (parser.Tokenizer.IsError)
+            if (!parser.Tokenizer.Successful)
             {
                 //TODO: Make custom exceptio
                 //show all parser errors
                 throw new Exception();
             }
-            else if (parser.IsError)
+            else if (!parser.Successful)
             {
                 //TODO: Make custom exception
                 //show all parser errors

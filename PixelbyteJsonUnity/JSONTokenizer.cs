@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace Pixelbyte.JsonUnity
 {
-    internal class JSONTokenizer
+    public class JSONTokenizer
     {
         //Matches a properly-formatted json number (except taht it allows multiple '.')
         static Regex jsonNumMatcher = new Regex(@"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$", RegexOptions.Compiled);
@@ -38,7 +38,7 @@ namespace Pixelbyte.JsonUnity
 
         public List<Token> tokens;
 
-        public bool IsError { get; private set; }
+        public bool Successful { get; private set; }
         public List<String> Errors{ get { return errors; } }
 
         public JSONTokenizer() { tokens = new List<Token>(); errors = new List<string>(); }
@@ -50,12 +50,10 @@ namespace Pixelbyte.JsonUnity
             {
                 this.json = json;
                 errors.Clear();
-                IsError = false;
+                Successful = true;
                 index = 0;
-                //Start in column 1, not 0
-                column = 1;
-                //Start on line 1
-                line = 1;
+                column = 1; //Start in column 1, not 0
+                line = 1; //Start on line 1
                 sb.Length = 0;
                 GetTokens();
                 this.json = String.Empty;
@@ -166,57 +164,7 @@ namespace Pixelbyte.JsonUnity
             return false;
         }
 
-        //bool PeekMatch(char[] chars, bool eatIfMatch = false)
-        //{
-        //    if (EOF() || chars == null) return false;
-
-        //    for (int i = 0; i < chars.Length; i++)
-        //    {
-        //        if (!PeekMatch(chars[i])) return false;
-        //    }
-        //    if (eatIfMatch) index += chars.Length;
-        //    return true;
-        //}
-
-        //bool PeekMatch(string str, bool eatIfMatch = false)
-        //{
-        //    if (EOF() || string.IsNullOrEmpty(str)) return false;
-
-        //    for (int i = 0; i < str.Length; i++)
-        //    {
-        //        if (!PeekMatch(str[i])) return false;
-        //    }
-        //    if (eatIfMatch) index += str.Length;
-        //    return true;
-        //}
-
-        //string PeekValue()
-        //{
-        //    sb.Length = 0;
-        //    int myIndex = index;
-        //    while (myIndex < json.Length && !IsNonValueCharacter(json[myIndex]))
-        //    {
-        //        sb.Append(json[myIndex]);
-        //        myIndex++;
-        //    }
-
-        //    return sb.ToString();
-        //}
-
         void EatWhiteSpace() { while (!EOF() && WHITESPACE.Contains(Peek())) NextChar(); }
-        void MatchWhile(char[] chars) { sb.Length = 0; while (!EOF() && chars.Contains(Peek())) sb.Append(NextChar()); }
-
-        /// <summary>
-        /// Matches all chars until the one specified, and eats it too
-        /// </summary>
-        /// <param until=""></param>
-        void MatchUntilThenEat(char until)
-        {
-            sb.Length = 0;
-            while (!EOF() && Peek() != until) sb.Append(NextChar());
-            while (Peek() == until) NextChar();
-            return;
-        }
 
         bool IsNonValueCharacter(char c) { return NONVALUECHARS.Contains(c); }
 
@@ -312,26 +260,13 @@ namespace Pixelbyte.JsonUnity
             }
         }
 
-        //string ReadNumber()
-        //{
-        //    sb.Length = 0;
-        //    //TODO: Support e and E notation
-        //    while (!IsEOF() && (char.IsDigit(Peek())) ||
-        //        (sb.Length == 0 && Peek() == '-') ||
-        //       (sb.Length > 0 && Peek() == '.'))
-        //    {
-        //        sb.Append(NextChar());
-        //    }
-        //    return sb.ToString();
-        //}
-
         void LogError(string text, int line = -1, int col = -1)
         {
             if (line > -1)
                 errors.Add(string.Format("Error [{0}:{1}] {2}", line, column, text));
             else
                 errors.Add(text);
-            IsError = true;
+            Successful = false;
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Pixelbyte.JsonUnity
 {
-    enum TokenType : UInt16
+    public enum TokenType : UInt16
     {
         None = 0,
 

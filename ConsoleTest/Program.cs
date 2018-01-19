@@ -18,8 +18,8 @@ namespace Pixelbyte.JsonUnity
 
         private static void TestDeserialize()
         {
-            //var jparser = JSONParser.ParseFile(@"..\..\..\SimpleClass.json");
-            string filename = @"..\..\..\LessSimpleClass.json";
+            var jparser = JSONParser.ParseFile(@"..\..\..\SimpleClass.json");
+            string filename = @"..\..\..\ClassWithClassReference.json";
             if (!File.Exists(filename))
                 throw new FileNotFoundException();
             //Pull in the json text
@@ -29,8 +29,8 @@ namespace Pixelbyte.JsonUnity
                 json = sr.ReadToEnd();
             }
 
-            var sc = Seroz.Deserialize<LessSimpleClass>(json);
-            if(sc != null)
+            var sc = Seroz.Deserialize<ClassWithClassReference>(json);
+            if (sc != null)
                 Console.WriteLine(sc.ToString());
         }
 
@@ -39,14 +39,14 @@ namespace Pixelbyte.JsonUnity
             var jparser = JSONParser.ParseFile(@"..\..\..\TestClass.json");
 
             //Show any Tokenizer errors
-            if (jparser.Tokenizer.IsError)
+            if (!jparser.Tokenizer.Successful)
             {
                 foreach (var err in jparser.Tokenizer.Errors)
                 {
                     Console.WriteLine(err);
                 }
             }
-            else if (jparser.IsError)
+            else if (jparser.Successful)
             {
                 foreach (var err in jparser.ParserErrors)
                 {

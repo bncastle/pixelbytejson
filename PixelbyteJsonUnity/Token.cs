@@ -1,6 +1,6 @@
 ﻿namespace Pixelbyte.JsonUnity
 {
-    class Token
+    public class Token
     {
         public TokenType Kind { get; private set; }
         public string Lexeme { get; private set; }

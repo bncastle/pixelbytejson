@@ -8,7 +8,7 @@ namespace Pixelbyte.JsonUnity
     /// Parses the given JSON string
     /// reference: https://www.json.org/
     /// </summary>
-    class JSONParser
+    public class JSONParser
     {
         JSONTokenizer tokenizer;
         List<string> errors;
@@ -20,7 +20,7 @@ namespace Pixelbyte.JsonUnity
 
         public JSONTokenizer Tokenizer { get { return tokenizer; } }
         public List<string> ParserErrors { get { return errors; } }
-        public bool IsError { get; private set; }
+        public bool Successful { get; private set; }
 
         int tokenIndex = 0;
 
@@ -36,31 +36,10 @@ namespace Pixelbyte.JsonUnity
             }
         }
 
-        /// <summary>
-        /// Retrieves the previous token or null if there is not one
-        /// </summary>
-        //Token PreviousToken
-        //{
-        //    get
-        //    {
-        //        if (tokenizer.tokens.Count == 0 || tokenIndex < 2) return null;
-        //        return tokenizer.tokens[tokenIndex - 2];
-        //    }
-        //}
-
-        //TokenType PreviousTokenType
-        //{
-        //    get
-        //    {
-        //        if (PreviousToken == null) return TokenType.None;
-        //        return PreviousToken.Kind;
-        //    }
-        //}
-
         private JSONParser(JSONTokenizer tok)
         {
             tokenizer = tok;
-            IsError = false;
+            Successful = true;
             errors = new List<string>();
         }
 
@@ -70,7 +49,7 @@ namespace Pixelbyte.JsonUnity
             JSONParser jp = new JSONParser(tok);
 
             tok.Tokenize(json);
-            if (!tok.IsError)
+            if (tok.Successful)
             {
                 jp.Parse();
             }
@@ -246,7 +225,7 @@ namespace Pixelbyte.JsonUnity
             }
             else
                 errors.Add(text);
-            IsError = true;
+            Successful = false;
         }
     }
 }

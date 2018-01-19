@@ -2,10 +2,10 @@
 {
     internal class SimpleClass
     {
-        public string name;
-        public int age;
-        public float temperature;
-        public bool isMale;
+        public string name = string.Empty;
+        public int age = 0;
+        public float temperature = 0;
+        public bool isMale = false;
 
         public override string ToString()
         {
@@ -15,20 +15,20 @@
 
     internal class Animal
     {
-        public string name;
-        public float percentExtinct;
+        public string name = string.Empty;
+        public float percentExtinct = 0;
         public override string ToString()
         {
             return string.Format("Animal: {0} Extinction: {1}", name, percentExtinct);
         }
     }
-    internal class LessSimpleClass
+    internal class ClassWithClassReference
     {
-        public string name;
-        public int age;
-        public float temperature;
-        public bool isMale;
-        public Animal pet;
+        public string name = string.Empty;
+        public int age = 0;
+        public float temperature = 0;
+        public bool isMale = false;
+        public Animal pet = null;
 
         public override string ToString()
         {
