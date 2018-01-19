@@ -195,23 +195,7 @@ namespace Pixelbyte.JsonUnity
             if (PeekToken.Kind.Contains(TokenType.Value))
             {
                 var token = NextToken();
-                switch (token.Kind)
-                {
-                    case TokenType.String:
-                        return new JSONPair(pairName, token.Lexeme);
-                    case TokenType.Number:
-                        //the tokenizer's already validated that this is a number so,
-                        return new JSONPair(pairName, double.Parse(token.Lexeme));
-                    case TokenType.True:
-                        return new JSONPair(pairName, true);
-                    case TokenType.False:
-                        return new JSONPair(pairName, false);
-                    case TokenType.Null:
-                        return new JSONPair(pairName, null);
-                    default:
-                        LogError("Unexpected value!", token, false);
-                        return null;
-                }
+                return new JSONPair(pairName, token.Literal);
             }
             else if (PeekToken.Kind == TokenType.OpenCurly)
             {

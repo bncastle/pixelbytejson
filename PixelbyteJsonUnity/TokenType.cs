@@ -50,40 +50,6 @@ namespace Pixelbyte.JsonUnity
         };
 
         public static bool Contains(this TokenType tok, TokenType b) { return (tok & b) > 0; }
-        public static bool IsExpected(this TokenType tok, TokenType expected) { return expected == TokenType.None || expected.Contains(tok); }
         public static string Actual(this TokenType tok) { return tokenMap[tok]; }
-        public static string ListActual(this TokenType tok)
-        {
-            if (tok == 0) return TokenType.None.Actual();
-
-            StringBuilder sb = new StringBuilder();
-            //TokenType is a 16-bit value so we'll check all 16 bits
-            for (int i = 0; i < 16; i++)
-            {
-                if (((1 << i) & (UInt16)tok) > 0)
-                {
-                    if (sb.Length > 0) sb.Append(", ");
-                    sb.Append(((TokenType)(1 << i)).Actual());
-                }
-            }
-            return sb.ToString();
-        }
-
-        public static string List(this TokenType tok)
-        {
-            if (tok == 0) return "none";
-
-            StringBuilder sb = new StringBuilder();
-            //TokenType is a 16-bit value so we'll check all 16 bits
-            for (int i = 0; i < 16; i++)
-            {
-                if (((1 << i) & (UInt16)tok) > 0)
-                {
-                    if (sb.Length > 0) sb.Append(", ");
-                    sb.Append(((TokenType)(1 << i)).ToString());
-                }
-            }
-            return sb.ToString();
-        }
     }
 }
