@@ -1,101 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace Pixelbyte.JsonUnity
 {
-    public class JSONObject
-    {
-        public string name;
-        public List<JSONPair> pairs;
-
-        public JSONObject(string name = null)
-        {
-            this.name = name;
-            pairs = new List<JSONPair>();
-        }
-
-        public bool Add(JSONPair pair)
-        {
-            //TODO: Check for duplicates?
-            pairs.Add(pair);
-            return true;
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder(name);
-            sb.Append(":");
-            sb.AppendLine();
-            for (int i = 0; i < pairs.Count; i++)
-            {
-                sb.Append(pairs[i].ToString());
-                if (i < pairs.Count - 1)
-                    sb.AppendLine();
-            }
-            return sb.ToString();
-        }
-    }
-
-    public class JSONPair
-    {
-        public string name;
-        public object value;
-
-        public JSONPair(string name, object val)
-        {
-            this.name = name;
-            value = val;
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0} : {1}", name, value.ToString());
-        }
-    }
-
     /// <summary>
     /// Parses the given JSON string
     /// reference: https://www.json.org/
     /// </summary>
-    public class JSONParser
+    class JSONParser
     {
-        static void Main()
-        {
-            //Pull in the json text
-            string testJson = string.Empty;
-            using (var sr = new StreamReader(@"..\..\TestClass.json"))
-            {
-                testJson = sr.ReadToEnd();
-            }
-
-            var jparser = Parse(testJson);
-
-            //Show any Tokenizer errors
-            if (jparser.IsTokenizerError)
-            {
-                foreach (var err in jparser.TokenizerErrors)
-                {
-                    Console.WriteLine(err);
-                }
-            }
-            else if (jparser.IsParserError)
-            {
-                foreach (var err in jparser.ParserErrors)
-                {
-                    Console.WriteLine(err);
-                }
-            }
-            else
-            {
-                Console.WriteLine("Success");
-            }
-
-            //Console.WriteLine(Environment.CurrentDirectory);
-        }
-
         JSONTokenizer tokenizer;
         List<string> errors;
 
@@ -104,10 +18,9 @@ namespace Pixelbyte.JsonUnity
         public JSONObject rootObject;
         public List<object> rootArray;
 
-        public bool IsTokenizerError { get { return tokenizer.IsError; } }
-        public List<string> TokenizerErrors { get { return tokenizer.errors; } }
+        public JSONTokenizer Tokenizer { get { return tokenizer; } }
         public List<string> ParserErrors { get { return errors; } }
-        public bool IsParserError { get; private set; }
+        public bool IsError { get; private set; }
 
         int tokenIndex = 0;
 
@@ -147,7 +60,7 @@ namespace Pixelbyte.JsonUnity
         private JSONParser(JSONTokenizer tok)
         {
             tokenizer = tok;
-            IsParserError = false;
+            IsError = false;
             errors = new List<string>();
         }
 
@@ -162,6 +75,19 @@ namespace Pixelbyte.JsonUnity
                 jp.Parse();
             }
             return jp;
+        }
+
+        public static JSONParser ParseFile(string filename)
+        {
+            if (!File.Exists(filename))
+                throw new FileNotFoundException();
+            //Pull in the json text
+            string json;
+            using (var sr = new StreamReader(filename))
+            {
+                json = sr.ReadToEnd();
+            }
+            return Parse(json);
         }
 
         /// <summary>
@@ -320,7 +246,7 @@ namespace Pixelbyte.JsonUnity
             }
             else
                 errors.Add(text);
-            IsParserError = true;
+            IsError = true;
         }
     }
 }

@@ -22,6 +22,8 @@ namespace Pixelbyte.JsonUnity
         //JSON only has number but I've split them up
         Number  = 0x080,
         //Integer = 0x100,
+
+        //Literals
         True    = 0x200,
         False   = 0x400,
         Null    = 0x800,

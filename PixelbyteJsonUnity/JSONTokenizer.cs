@@ -34,11 +34,12 @@ namespace Pixelbyte.JsonUnity
 
         //This is where we'll stor a multi-character token
         StringBuilder sb = new StringBuilder();
-        public List<string> errors;
+        List<string> errors;
 
         public List<Token> tokens;
 
         public bool IsError { get; private set; }
+        public List<String> Errors{ get { return errors; } }
 
         public JSONTokenizer() { tokens = new List<Token>(); errors = new List<string>(); }
 

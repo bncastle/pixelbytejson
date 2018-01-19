@@ -69,5 +69,66 @@ namespace Pixelbyte.JsonUnity
 
             if (callbacks != null) callbacks.PostSerialization();
         }
+
+        public static T Deserialize<T>(string json)
+        {
+            var parser = JSONParser.Parse(json);
+            if (parser.Tokenizer.IsError)
+            {
+                //TODO: Make custom exceptio
+                //show all parser errors
+                throw new Exception();
+            }
+            else if (parser.IsError)
+            {
+                //TODO: Make custom exception
+                //show all parser errors
+                throw new Exception();
+            }
+            else if (parser.rootObject == null)
+            {
+                //TODO: Make custom exceptio
+                throw new Exception("JSON root was not an object!");
+            }
+            else
+            {
+                return Deserialize<T>(parser.rootObject);
+            }
+        }
+
+        static T Deserialize<T>(JSONObject jsonObj)
+        {
+            if (jsonObj == null) throw new ArgumentNullException("jsonObj");
+
+            var obj = Activator.CreateInstance<T>();
+
+            var fieldInfos = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            //What to do here? Nothing maybe?
+            if (fieldInfos == null)
+                throw new Exception();
+
+            //TODO: populate it here
+            foreach (var item in jsonObj.pairs)
+            {
+                var fi = fieldInfos.FindByName(item.name);
+                if (fi != null)
+                {
+                    if (fi.FieldType == typeof(int))
+                        fi.SetValue(obj, Convert.ToInt32(item.value));
+                    else if (fi.FieldType == typeof(Single))
+                        fi.SetValue(obj, Convert.ToSingle(item.value));
+                    //https://stackoverflow.com/questions/2604743/setting-generic-type-at-runtime
+                    else if (item.value is JSONObject) 
+                        Console.WriteLine("ll");
+                    //Deserialize < fi.FieldType > (item.value);
+                        //fi.SetValue(obj, Deserialize < fi.FieldType> (item.value));
+                    else
+                        fi.SetValue(obj, item.value);
+                }
+            }
+
+            return obj;
+        }
     }
 }

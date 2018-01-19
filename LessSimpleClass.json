@@ -1,0 +1,7 @@
+{
+    "name": "Gerund",
+    "age": 23,
+    "isMale": true,
+    "temperature": 32.4,
+    "pet" :{"name" :"Rumpus", "percentExtinct": 46.25}
+}
