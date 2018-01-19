@@ -110,22 +110,24 @@ namespace Pixelbyte.JsonUnity
             if (fieldInfos == null)
                 throw new Exception();
 
-            foreach (var item in jsonObj)
+            foreach (var fi in fieldInfos)
             {
-                var fi = fieldInfos.FindByName(item.Key);
-                if (fi != null)
+                //Look for the field name in the json object's data
+                var parameter = jsonObj[fi.Name];
+                if (parameter != null)
                 {
                     if (fi.FieldType == typeof(int))
-                        fi.SetValue(obj, item.Value.ToInt32());
+                        fi.SetValue(obj, parameter.ToInt32());
                     else if (fi.FieldType == typeof(Single))
-                        fi.SetValue(obj, item.Value.ToSingle());
+                        fi.SetValue(obj, parameter.ToSingle());
                     else if (fi.FieldType == typeof(bool))
-                        fi.SetValue(obj, item.Value.ToBoolean());
-                    else if ((item.Value as JsonObject) != null)
-                        fi.SetValue(obj, Deserialize(item.Value as JsonObject, fi.FieldType));
+                        fi.SetValue(obj, parameter.ToBoolean());
+                    else if ((parameter as JsonObject) != null)
+                        fi.SetValue(obj, Deserialize(parameter as JsonObject, fi.FieldType));
                     else
-                        fi.SetValue(obj, item.Value.ToString());
+                        fi.SetValue(obj, parameter.ToString());
                 }
+                //TODO: Issue a warning?
             }
             return obj;
         }
