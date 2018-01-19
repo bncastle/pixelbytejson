@@ -47,6 +47,7 @@
     <Compile Include="Interfaces\IDeserializationCallbacks.cs" />
     <Compile Include="Interfaces\ISerializeCallbacks.cs" />
     <Compile Include="InternalExtensionMethods.cs" />
+    <Compile Include="JSONObject.cs" />
     <Compile Include="JSONPair.cs" />
     <Compile Include="JSONParser.cs" />
     <Compile Include="JSONTokenizer.cs" />
@@ -54,11 +55,6 @@
     <Compile Include="Seroz.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="TokenType.cs" />
-    <Compile Include="Types\BaseJsonValue.cs" />
-    <Compile Include="Types\JsonBool.cs" />
-    <Compile Include="Types\JsonNumber.cs" />
-    <Compile Include="Types\JsonObject.cs" />
-    <Compile Include="Types\JsonString.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

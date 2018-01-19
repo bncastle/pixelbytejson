@@ -15,7 +15,7 @@ namespace Pixelbyte.JsonUnity
 
         //This Parsed result, if no errors, will either be
         //a JsonObject, or an array
-        public JsonObject rootObject;
+        public JSONObject rootObject;
         public List<object> rootArray;
 
         public JSONTokenizer Tokenizer { get { return tokenizer; } }
@@ -120,9 +120,9 @@ namespace Pixelbyte.JsonUnity
 
         }
 
-        JsonObject ParseObject()
+        JSONObject ParseObject()
         {
-            JsonObject obj = new JsonObject();
+            JSONObject obj = new JSONObject();
 
             //Eat the OpenCurly Object
             NextToken();

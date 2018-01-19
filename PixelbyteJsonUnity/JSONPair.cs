@@ -1,11 +1,11 @@
 ﻿namespace Pixelbyte.JsonUnity
 {
-    public class JSONPair
+    internal class JSONPair
     {
         internal string name;
-        internal BaseJsonValue value;
+        internal object value;
 
-        internal JSONPair(string name, BaseJsonValue val)
+        internal JSONPair(string name, object val)
         {
             this.name = name;
             value = val;

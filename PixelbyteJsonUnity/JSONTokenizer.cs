@@ -105,15 +105,15 @@ namespace Pixelbyte.JsonUnity
                     case '"':
                         var str = ReadString();
                         if (!string.IsNullOrEmpty(str))
-                            tokens.Add(new Token(TokenType.String, currentLine, currentColumn, str, new JsonString(str)));
+                            tokens.Add(new Token(TokenType.String, currentLine, currentColumn, str, str));
                         //LogError("Illegal null or empty string", currentLine, currentColumn);
                         break;
                     default:
                         var val = ReadValue();
                         if (val == "false")
-                            tokens.Add(new Token(TokenType.False, currentLine, currentColumn, val, new JsonBool(false)));
+                            tokens.Add(new Token(TokenType.False, currentLine, currentColumn, val, false));
                         else if (val == "true")
-                            tokens.Add(new Token(TokenType.True, currentLine, currentColumn, val, new JsonBool(true)));
+                            tokens.Add(new Token(TokenType.True, currentLine, currentColumn, val, true));
                         else if (val == "null")
                             tokens.Add(new Token(TokenType.Null, currentLine, currentColumn, val, null));
                         else if (!string.IsNullOrEmpty(val) && (char.IsDigit(val[0]) || val[0] == '-'))
@@ -135,7 +135,7 @@ namespace Pixelbyte.JsonUnity
                                     {
                                         LogError("Unable to parse number from string " + val);
                                     }
-                                    tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, new JsonNumber(value)));
+                                    tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, value));
                                 }
                                 else
                                 {
@@ -144,7 +144,7 @@ namespace Pixelbyte.JsonUnity
                                     {
                                         LogError("Unable to parse number from string " + val);
                                     }
-                                    tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, new JsonNumber(value)));
+                                    tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, value));
                                 }
                             }
                             //Floating point number? Ok then.
@@ -156,7 +156,7 @@ namespace Pixelbyte.JsonUnity
                                 {
                                     LogError("Unable to parse number from string " + val);
                                 }
-                                tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, new JsonNumber(value)));
+                                tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, value));
                             }
                         }
                         else

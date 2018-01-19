@@ -98,7 +98,7 @@ namespace Pixelbyte.JsonUnity
             }
         }
 
-        static object Deserialize(JsonObject jsonObj, Type type)
+        static object Deserialize(JSONObject jsonObj, Type type)
         {
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
@@ -117,22 +117,22 @@ namespace Pixelbyte.JsonUnity
                 if (parameter != null)
                 {
                     if (fi.FieldType == typeof(int))
-                        fi.SetValue(obj, parameter.ToInt32());
+                        fi.SetValue(obj, Convert.ToInt32(parameter));
                     else if (fi.FieldType == typeof(Single))
-                        fi.SetValue(obj, parameter.ToSingle());
+                        fi.SetValue(obj, Convert.ToSingle(parameter));
                     else if (fi.FieldType == typeof(bool))
-                        fi.SetValue(obj, parameter.ToBoolean());
-                    else if ((parameter as JsonObject) != null)
-                        fi.SetValue(obj, Deserialize(parameter as JsonObject, fi.FieldType));
+                        fi.SetValue(obj, Convert.ToBoolean(parameter));
+                    else if (parameter is JSONObject)
+                        fi.SetValue(obj, Deserialize(parameter as JSONObject, fi.FieldType));
                     else
-                        fi.SetValue(obj, parameter.ToString());
+                        fi.SetValue(obj, parameter);
                 }
                 //TODO: Issue a warning?
             }
             return obj;
         }
 
-        static T Deserialize<T>(JsonObject jsonObj)
+        static T Deserialize<T>(JSONObject jsonObj)
         {
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
