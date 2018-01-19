@@ -2,10 +2,10 @@
 {
     public class JSONPair
     {
-        public string name;
-        public object value;
+        internal string name;
+        internal BaseJsonValue value;
 
-        public JSONPair(string name, object val)
+        internal JSONPair(string name, BaseJsonValue val)
         {
             this.name = name;
             value = val;

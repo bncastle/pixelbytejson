@@ -48,7 +48,7 @@ namespace Pixelbyte.JsonUnity
             }
             else if (jparser.Successful)
             {
-                foreach (var err in jparser.ParserErrors)
+                foreach (var err in jparser.Errors)
                 {
                     Console.WriteLine(err);
                 }

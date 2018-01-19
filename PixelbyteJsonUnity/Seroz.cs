@@ -75,15 +75,17 @@ namespace Pixelbyte.JsonUnity
             var parser = JSONParser.Parse(json);
             if (!parser.Tokenizer.Successful)
             {
-                //TODO: Make custom exceptio
+                //TODO: Make custom exception
                 //show all parser errors
-                throw new Exception();
+                throw new Exception(String.Join(Environment.NewLine, 
+                    parser.Tokenizer.Errors.ToArray()));
             }
             else if (!parser.Successful)
             {
                 //TODO: Make custom exception
                 //show all parser errors
-                throw new Exception();
+                throw new Exception(String.Join(Environment.NewLine,
+                    parser.Errors.ToArray()));
             }
             else if (parser.rootObject == null)
             {
@@ -96,7 +98,7 @@ namespace Pixelbyte.JsonUnity
             }
         }
 
-        static object Deserialize(JSONObject jsonObj, Type type)
+        static object Deserialize(JsonObject jsonObj, Type type)
         {
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
@@ -108,28 +110,27 @@ namespace Pixelbyte.JsonUnity
             if (fieldInfos == null)
                 throw new Exception();
 
-            //TODO: populate it here
-            foreach (var item in jsonObj.pairs)
+            foreach (var item in jsonObj)
             {
-                var fi = fieldInfos.FindByName(item.name);
+                var fi = fieldInfos.FindByName(item.Key);
                 if (fi != null)
                 {
                     if (fi.FieldType == typeof(int))
-                        fi.SetValue(obj, Convert.ToInt32(item.value));
+                        fi.SetValue(obj, item.Value.ToInt32());
                     else if (fi.FieldType == typeof(Single))
-                        fi.SetValue(obj, Convert.ToSingle(item.value));
-                    //https://stackoverflow.com/questions/2604743/setting-generic-type-at-runtime
-                    else if (item.value is JSONObject)
-                        fi.SetValue(obj, Deserialize(item.value as JSONObject, fi.FieldType));
+                        fi.SetValue(obj, item.Value.ToSingle());
+                    else if (fi.FieldType == typeof(bool))
+                        fi.SetValue(obj, item.Value.ToBoolean());
+                    else if ((item.Value as JsonObject) != null)
+                        fi.SetValue(obj, Deserialize(item.Value as JsonObject, fi.FieldType));
                     else
-                        fi.SetValue(obj, item.value);
+                        fi.SetValue(obj, item.Value.ToString());
                 }
             }
-
             return obj;
         }
 
-        static T Deserialize<T>(JSONObject jsonObj)
+        static T Deserialize<T>(JsonObject jsonObj)
         {
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 

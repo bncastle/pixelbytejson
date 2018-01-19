@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -19,6 +20,7 @@ namespace Pixelbyte.JsonUnity
 
         static char[] STRING_ESCAPES = new char[] { '"', '/', '\\', 'b', 'r', 'n', 'f', 't' };
         static char[] STRING_ESCAPE_CODES = new char[] { '"', '/', '\\', '\b', '\r', '\n', '\f', '\t' };
+        static char[] FLOATING_POINT_CHARS = new char[] { '.', 'e', 'E' };
 
         //The json string we want to parse
         string json;
@@ -39,7 +41,7 @@ namespace Pixelbyte.JsonUnity
         public List<Token> tokens;
 
         public bool Successful { get; private set; }
-        public List<String> Errors{ get { return errors; } }
+        public List<String> Errors { get { return errors; } }
 
         public JSONTokenizer() { tokens = new List<Token>(); errors = new List<string>(); }
 
@@ -103,26 +105,59 @@ namespace Pixelbyte.JsonUnity
                     case '"':
                         var str = ReadString();
                         if (!string.IsNullOrEmpty(str))
-                            tokens.Add(new Token(TokenType.String, currentLine, currentColumn, str, str));
+                            tokens.Add(new Token(TokenType.String, currentLine, currentColumn, str, new JsonString(str)));
                         //LogError("Illegal null or empty string", currentLine, currentColumn);
                         break;
                     default:
                         var val = ReadValue();
                         if (val == "false")
-                            tokens.Add(new Token(TokenType.False, currentLine, currentColumn, val, false));
+                            tokens.Add(new Token(TokenType.False, currentLine, currentColumn, val, new JsonBool(false)));
                         else if (val == "true")
-                            tokens.Add(new Token(TokenType.True, currentLine, currentColumn, val, true));
+                            tokens.Add(new Token(TokenType.True, currentLine, currentColumn, val, new JsonBool(true)));
                         else if (val == "null")
                             tokens.Add(new Token(TokenType.Null, currentLine, currentColumn, val, null));
                         else if (!string.IsNullOrEmpty(val) && (char.IsDigit(val[0]) || val[0] == '-'))
                         {
                             if (val.CountChar('.') > 1 || !jsonNumMatcher.IsMatch(val))
+                            {
                                 LogError("Malformed number: " + val, currentLine, currentColumn);
+                                break;
+                            }
 
-                            if (val.IndexOf('.') == -1)
-                                tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, long.Parse(val)));
+                            //Is it an integer?
+                            if (val.IndexOfAny(FLOATING_POINT_CHARS) == -1)
+                            {
+                                //Store the value in the largest C# type
+                                if (val[0] == '-')
+                                {
+                                    Int64 value;
+                                    if (!Int64.TryParse(val, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out value))
+                                    {
+                                        LogError("Unable to parse number from string " + val);
+                                    }
+                                    tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, new JsonNumber(value)));
+                                }
+                                else
+                                {
+                                    UInt64 value;
+                                    if (!UInt64.TryParse(val, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out value))
+                                    {
+                                        LogError("Unable to parse number from string " + val);
+                                    }
+                                    tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, new JsonNumber(value)));
+                                }
+                            }
+                            //Floating point number? Ok then.
                             else
-                                tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, Double.Parse(val)));
+                            {
+                                //Store the value in the largest C# type
+                                Double value;
+                                if (!Double.TryParse(val, NumberStyles.Float, NumberFormatInfo.InvariantInfo, out value))
+                                {
+                                    LogError("Unable to parse number from string " + val);
+                                }
+                                tokens.Add(new Token(TokenType.Number, currentLine, currentColumn, val, new JsonNumber(value)));
+                            }
                         }
                         else
                         {

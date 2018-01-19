@@ -15,11 +15,11 @@ namespace Pixelbyte.JsonUnity
 
         //This Parsed result, if no errors, will either be
         //a JsonObject, or an array
-        public JSONObject rootObject;
+        public JsonObject rootObject;
         public List<object> rootArray;
 
         public JSONTokenizer Tokenizer { get { return tokenizer; } }
-        public List<string> ParserErrors { get { return errors; } }
+        public List<string> Errors { get { return errors; } }
         public bool Successful { get; private set; }
 
         int tokenIndex = 0;
@@ -108,7 +108,9 @@ namespace Pixelbyte.JsonUnity
             }
             else if (PeekToken.Kind == TokenType.OpenBracket)
             {
-                return new JSONPair(pairName, ParseArray());
+                throw new Exception();
+                //TODO: 
+               // return new JSONPair(pairName, ParseArray());
             }
             else
             {
@@ -118,9 +120,9 @@ namespace Pixelbyte.JsonUnity
 
         }
 
-        JSONObject ParseObject()
+        JsonObject ParseObject()
         {
-            JSONObject obj = new JSONObject();
+            JsonObject obj = new JsonObject();
 
             //Eat the OpenCurly Object
             NextToken();
@@ -135,7 +137,7 @@ namespace Pixelbyte.JsonUnity
 
                 var pair = ParsePair();
                 if (pair == null) break;
-                else obj.Add(pair);
+                else obj.Add(pair.name, pair.value);
 
                 if (PeekToken == null || PeekToken.Kind == TokenType.CloseCurly) break;
 

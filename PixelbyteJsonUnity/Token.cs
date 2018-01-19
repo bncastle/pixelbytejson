@@ -7,11 +7,11 @@
         /// <summary>
         /// Some lexemes have a literal value. This holds those
         /// </summary>
-        public object Literal { get; private set; }
+        public BaseJsonValue Literal { get; private set; }
         public int Line { get; private set; }
         public int Column { get; private set; }
 
-        public Token(TokenType type, int line, int column, string lexeme = null, object literal = null)
+        public Token(TokenType type, int line, int column, string lexeme = null, BaseJsonValue literal = null)
         {
             Kind = type;
             Column = column;
