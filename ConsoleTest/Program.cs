@@ -11,11 +11,11 @@ namespace Pixelbyte.JsonUnity
         static void Main()
         {
             //TestJsonParser();
-            //TestDeserialize();
+            TestDeserialize();
 
-            var parser = JSONParser.Parse("{\"Fred\" : \"Ted}");
-            Console.WriteLine(parser.Tokenizer.AllErrors);
-            Console.WriteLine(parser.AllErrors);
+            //var parser = JSONParser.Parse("{\"Fred\" : \"Ted}");
+            //Console.WriteLine(parser.Tokenizer.AllErrors);
+            //Console.WriteLine(parser.AllErrors);
 
             //Console.WriteLine(Environment.CurrentDirectory);
         }

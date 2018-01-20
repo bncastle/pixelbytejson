@@ -47,6 +47,7 @@
     <Compile Include="Interfaces\IDeserializationCallbacks.cs" />
     <Compile Include="Interfaces\ISerializeCallbacks.cs" />
     <Compile Include="InternalExtensionMethods.cs" />
+    <Compile Include="JSONCreator.cs" />
     <Compile Include="Jsonizer.cs" />
     <Compile Include="JSONObject.cs" />
     <Compile Include="JSONPair.cs" />

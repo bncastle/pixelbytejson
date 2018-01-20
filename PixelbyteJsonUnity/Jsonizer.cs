@@ -24,8 +24,14 @@ namespace Pixelbyte.JsonUnity
         //	public static string Ser(object obj)
         public static void Ser(object obj)
         {
+            //Object to serialize can't be null
+            //TODO: Or can it?
+            if (obj == null)
+                throw new ArgumentNullException("obj");
+
             var fi = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            //		var callback = obj as IDeserializeCallbacks;
+            
+            //See if the object implements the Serialization callbacks interface
             var callbacks = obj as ISerializeCallbacks;
 
             if (callbacks != null) callbacks.PreSerialization();
@@ -102,6 +108,9 @@ namespace Pixelbyte.JsonUnity
 
             var obj = Activator.CreateInstance(type);
 
+            //See if this object implements the Deserialization callback interface
+            var callbacks = obj as IDeserializationCallbacks;
+
             var fieldInfos = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
             //What to do here? Nothing maybe?
@@ -148,6 +157,10 @@ namespace Pixelbyte.JsonUnity
                 }
                 //TODO: Issue a warning?
             }
+
+            //Deserialized Callback
+            if (callbacks != null) callbacks.OnDeserialized();
+
             return obj;
         }
 

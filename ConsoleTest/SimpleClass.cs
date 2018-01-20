@@ -22,13 +22,18 @@
             return string.Format("Animal: {0} Extinction: {1}", name, percentExtinct);
         }
     }
-    internal class ClassWithClassReference
+    internal class ClassWithClassReference : IDeserializationCallbacks
     {
         public string name = string.Empty;
         public int age = 0;
         public float temperature = 0;
         public bool isMale = false;
         public Animal pet = null;
+
+        public void OnDeserialized()
+        {
+            System.Console.WriteLine("Deserialized!");
+        }
 
         public override string ToString()
         {

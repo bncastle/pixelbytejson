@@ -1,5 +1,10 @@
 ﻿namespace Pixelbyte.JsonUnity
 {
+    /// <summary>
+    /// Implementation of the JSON 
+    /// String : Value
+    /// portion of a JSON object
+    /// </summary>
     internal class JSONPair
     {
         internal string name;
