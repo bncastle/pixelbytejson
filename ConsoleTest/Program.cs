@@ -29,7 +29,7 @@ namespace Pixelbyte.JsonUnity
                 json = sr.ReadToEnd();
             }
 
-            var sc = Seroz.Deserialize<ClassWithClassReference>(json);
+            var sc = Jsonizer.Deserialize<ClassWithClassReference>(json);
             if (sc != null)
                 Console.WriteLine(sc.ToString());
         }

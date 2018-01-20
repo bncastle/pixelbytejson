@@ -40,11 +40,7 @@ namespace Pixelbyte.JsonUnity
             sb.AppendLine();
 
             foreach (var item in pairs)
-            {
-                sb.Append(item.Key);
-                sb.Append(" : ");
-                sb.Append(item.Value.ToString());
-            }
+                sb.AppendLine(item.ToString());
             return sb.ToString();
         }
     }

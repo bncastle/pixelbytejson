@@ -4,7 +4,7 @@ using System.Reflection;
 namespace Pixelbyte.JsonUnity
 {
     // Define other methods and classes here
-    public static class Seroz
+    public static class Jsonizer
     {
         static bool IsPublic(FieldInfo field) { return field.IsPublic; }
         static bool IsPrivate(FieldInfo field) { return field.IsPrivate; }
@@ -89,7 +89,7 @@ namespace Pixelbyte.JsonUnity
             }
             else if (parser.rootObject == null)
             {
-                //TODO: Make custom exceptio
+                //TODO: Make custom exception
                 throw new Exception("JSON root was not an object!");
             }
             else
@@ -116,14 +116,35 @@ namespace Pixelbyte.JsonUnity
                 var parameter = jsonObj[fi.Name];
                 if (parameter != null)
                 {
-                    if (fi.FieldType == typeof(int))
+                    //Signed ints
+                    if (fi.FieldType == typeof(Int64))
+                            fi.SetValue(obj, Convert.ToInt64(parameter));
+                    else if (fi.FieldType == typeof(Int32))
                         fi.SetValue(obj, Convert.ToInt32(parameter));
+                    else if (fi.FieldType == typeof(Int16))
+                        fi.SetValue(obj, Convert.ToInt16(parameter));
+                    else if (fi.FieldType == typeof(SByte))
+                        fi.SetValue(obj, Convert.ToSByte(parameter));
+                    //Unsigned ints
+                    else if (fi.FieldType == typeof(UInt64))
+                        fi.SetValue(obj, Convert.ToUInt64(parameter));
+                    else if (fi.FieldType == typeof(UInt32))
+                        fi.SetValue(obj, Convert.ToUInt32(parameter));
+                    else if (fi.FieldType == typeof(UInt16))
+                        fi.SetValue(obj, Convert.ToUInt16(parameter));
+                    else if (fi.FieldType == typeof(Byte))
+                        fi.SetValue(obj, Convert.ToByte(parameter));
+                    //Float values
+                    else if (fi.FieldType == typeof(Decimal))
+                        fi.SetValue(obj, Convert.ToDecimal(parameter));
+                    else if (fi.FieldType == typeof(Double))
+                        fi.SetValue(obj, Convert.ToDouble(parameter));
                     else if (fi.FieldType == typeof(Single))
                         fi.SetValue(obj, Convert.ToSingle(parameter));
-                    else if (fi.FieldType == typeof(bool))
-                        fi.SetValue(obj, Convert.ToBoolean(parameter));
+                    //Other classes
                     else if (parameter is JSONObject)
                         fi.SetValue(obj, Deserialize(parameter as JSONObject, fi.FieldType));
+                    //strings, booleans
                     else
                         fi.SetValue(obj, parameter);
                 }

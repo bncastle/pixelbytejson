@@ -47,12 +47,12 @@
     <Compile Include="Interfaces\IDeserializationCallbacks.cs" />
     <Compile Include="Interfaces\ISerializeCallbacks.cs" />
     <Compile Include="InternalExtensionMethods.cs" />
+    <Compile Include="Jsonizer.cs" />
     <Compile Include="JSONObject.cs" />
     <Compile Include="JSONPair.cs" />
     <Compile Include="JSONParser.cs" />
     <Compile Include="JSONTokenizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Seroz.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="TokenType.cs" />
   </ItemGroup>
