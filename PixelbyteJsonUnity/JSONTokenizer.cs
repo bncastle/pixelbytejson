@@ -41,7 +41,13 @@ namespace Pixelbyte.JsonUnity
         public List<Token> tokens;
 
         public bool Successful { get; private set; }
+
         public List<String> Errors { get { return errors; } }
+
+        /// <summary>
+        /// Gets all the errors. One per line.
+        /// </summary>
+        public string AllErrors { get { return String.Join(Environment.NewLine, Errors.ToArray()); } }
 
         public JSONTokenizer() { tokens = new List<Token>(); errors = new List<string>(); }
 
@@ -62,7 +68,7 @@ namespace Pixelbyte.JsonUnity
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                LogError(e.Message);
             }
         }
 
@@ -163,7 +169,7 @@ namespace Pixelbyte.JsonUnity
                         {
                             LogError(string.Format("Unexpected unquoted string: {0}", val), currentLine, currentColumn);
                             //If there is a quote at the end of this, just eat it
-                            if (Peek() == '"') NextChar();
+                            if (!EOF() && Peek() == '"') NextChar();
                             //LogError("Supported unquoted strings: true, false, null");
                         }
                         break;
@@ -298,7 +304,7 @@ namespace Pixelbyte.JsonUnity
         void LogError(string text, int line = -1, int col = -1)
         {
             if (line > -1)
-                errors.Add(string.Format("Error [{0}:{1}] {2}", line, column, text));
+                errors.Add(string.Format("Tokenizer [{0}:{1}] {2}", line, column, text));
             else
                 errors.Add(text);
             Successful = false;

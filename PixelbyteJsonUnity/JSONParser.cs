@@ -19,7 +19,13 @@ namespace Pixelbyte.JsonUnity
         public List<object> rootArray;
 
         public JSONTokenizer Tokenizer { get { return tokenizer; } }
+
         public List<string> Errors { get { return errors; } }
+        /// <summary>
+        /// Gets all the errors. One per line.
+        /// </summary>
+        public string AllErrors { get { return String.Join(Environment.NewLine, Errors.ToArray()); } }
+
         public bool Successful { get; private set; }
 
         int tokenIndex = 0;
@@ -43,19 +49,6 @@ namespace Pixelbyte.JsonUnity
             errors = new List<string>();
         }
 
-        public static JSONParser Parse(string json)
-        {
-            JSONTokenizer tok = new JSONTokenizer();
-            JSONParser jp = new JSONParser(tok);
-
-            tok.Tokenize(json);
-            if (tok.Successful)
-            {
-                jp.Parse();
-            }
-            return jp;
-        }
-
         public static JSONParser ParseFile(string filename)
         {
             if (!File.Exists(filename))
@@ -69,6 +62,26 @@ namespace Pixelbyte.JsonUnity
             return Parse(json);
         }
 
+        public static JSONParser Parse(string json)
+        {
+            JSONTokenizer tok = new JSONTokenizer();
+            JSONParser jp = new JSONParser(tok);
+
+            tok.Tokenize(json);
+            //if (tok.Successful)
+            {
+                try
+                {
+                    jp.Parse();
+                }
+                catch (Exception e)
+                {
+                    jp.LogError(e.Message);
+                }
+            }
+            return jp;
+        }
+
         /// <summary>
         /// Gets the next available token and advances to the next one
         /// </summary>
@@ -76,6 +89,14 @@ namespace Pixelbyte.JsonUnity
         {
             if (tokenizer.tokens.Count == 0 || tokenIndex >= tokenizer.tokens.Count) return null;
             var tok = tokenizer.tokens[tokenIndex];
+            tokenIndex++;
+            return tok;
+        }
+
+        Token PreviousToken()
+        {
+            if (tokenizer.tokens.Count == 0 || tokenIndex < 2) return null;
+            var tok = tokenizer.tokens[tokenIndex - 2];
             tokenIndex++;
             return tok;
         }
@@ -88,7 +109,13 @@ namespace Pixelbyte.JsonUnity
                 return null;
             }
             var pairName = NextToken().Lexeme;
-            if (PeekToken.Kind != TokenType.Colon)
+
+            if (PeekToken == null)
+            {
+                LogError("Expected a ':'", PreviousToken(), false);
+                return null;
+            }
+            else if(PeekToken.Kind != TokenType.Colon)
             {
                 LogError("Expected a ':'", PeekToken, false);
                 return null;
@@ -96,6 +123,12 @@ namespace Pixelbyte.JsonUnity
 
             //Eat the :
             NextToken();
+
+            if (PeekToken == null)
+            {
+                LogError("Expected a value", PreviousToken(), false);
+                return null;
+            }
 
             if (PeekToken.Kind.Contains(TokenType.Value))
             {
@@ -110,7 +143,7 @@ namespace Pixelbyte.JsonUnity
             {
                 throw new Exception();
                 //TODO: 
-               // return new JSONPair(pairName, ParseArray());
+                // return new JSONPair(pairName, ParseArray());
             }
             else
             {
@@ -129,6 +162,10 @@ namespace Pixelbyte.JsonUnity
 
             while (PeekToken != null)
             {
+                //It could be an empty object
+                if (PeekToken.Kind == TokenType.CloseCurly) break;
+
+                //Otherwise, we must have a string to indicate a value of some sort
                 if (PeekToken.Kind != TokenType.String)
                 {
                     LogError("Expected a string!", PeekToken, false);
@@ -210,7 +247,9 @@ namespace Pixelbyte.JsonUnity
 
         void Parse()
         {
-            if (PeekToken.Kind == TokenType.OpenCurly)
+            if (PeekToken == null)
+                LogError("No valid JSON tokens found!");
+            else if (PeekToken.Kind == TokenType.OpenCurly)
                 rootObject = ParseObject();
             else if (PeekToken.Kind == TokenType.OpenBracket)
                 rootArray = ParseArray();
@@ -221,12 +260,12 @@ namespace Pixelbyte.JsonUnity
             if (tok != null)
             {
                 if (showtoken)
-                    errors.Add(string.Format("Error [{0}:{1}] Token: {2} {3}", tok.Line, tok.Column, tok.Kind.Actual(), text));
+                    errors.Add(string.Format("Parser [{0}:{1}] Token: {2}: {3}", tok.Line, tok.Column, tok.Kind.Actual(), text));
                 else
-                    errors.Add(string.Format("Error [{0}:{1}] {2}", tok.Line, tok.Column, text));
+                    errors.Add(string.Format("Parser [{0}:{1}]: {2}", tok.Line, tok.Column, text));
             }
             else
-                errors.Add(text);
+                errors.Add("Parser: " +  text);
             Successful = false;
         }
     }

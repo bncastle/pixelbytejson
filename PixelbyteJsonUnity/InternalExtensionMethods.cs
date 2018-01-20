@@ -78,20 +78,5 @@ namespace Pixelbyte.JsonUnity
                 default: return false;
             }
         }
-
-        internal static bool IsValid(this TokenType token, TokenType validTokens)
-        {
-            return (token & validTokens) > 0;
-        }
-
-        internal static FieldInfo FindByName(this FieldInfo[] infos, string fieldName)
-        {
-            for (int i = 0; i < infos.Length; i++)
-            {
-                //TOOD: Should it be case insensitive?
-                if (fieldName == infos[i].Name) return infos[i];
-            }
-            return null;
-        }
     }
 }

@@ -77,15 +77,13 @@ namespace Pixelbyte.JsonUnity
             {
                 //TODO: Make custom exception
                 //show all parser errors
-                throw new Exception(String.Join(Environment.NewLine, 
-                    parser.Tokenizer.Errors.ToArray()));
+                throw new Exception(parser.Tokenizer.AllErrors);
             }
             else if (!parser.Successful)
             {
                 //TODO: Make custom exception
                 //show all parser errors
-                throw new Exception(String.Join(Environment.NewLine,
-                    parser.Errors.ToArray()));
+                throw new Exception(parser.AllErrors);
             }
             else if (parser.rootObject == null)
             {

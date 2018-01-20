@@ -28,6 +28,24 @@ namespace Tests
         {
             var parser = JSONParser.Parse("hfjdsgkds");
             Assert.IsFalse(parser.Tokenizer.Successful);
+            Assert.IsFalse(parser.Successful);
+        }
+
+        [Test]
+        public void EmptyObject()
+        {
+            var parser = JSONParser.Parse("{}");
+            Assert.IsTrue(parser.Tokenizer.Successful);
+            Assert.IsTrue(parser.Successful);
+        }
+
+        [Test]
+        public void BadNumber()
+        {
+            var parser = JSONParser.Parse(@"{""Number"" : 908,82f}");
+            Assert.IsFalse(parser.Tokenizer.Successful);
+            Console.WriteLine(parser.Tokenizer.AllErrors);
+            Console.WriteLine(parser.AllErrors);
         }
     }
 }
