@@ -30,11 +30,16 @@ namespace Pixelbyte.JsonUnity
                 throw new ArgumentNullException("obj");
 
             var fi = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            
+
             //See if the object implements the Serialization callbacks interface
             var callbacks = obj as ISerializeCallbacks;
 
             if (callbacks != null) callbacks.PreSerialization();
+
+            JSONCreator creator = new JSONCreator(true);
+
+            //For us, any c# object we want to serialize is a JSON object
+            creator.BeginObject();
 
             foreach (var fieldInfo in fi)
             {
@@ -45,33 +50,47 @@ namespace Pixelbyte.JsonUnity
                 }
 
                 object value = fieldInfo.GetValue(obj);
-
                 string stringVal = String.Empty;
-                if (fieldInfo.FieldType == typeof(int))
-                {
-                    stringVal = value.ToString();
-                }
-                else if (fieldInfo.FieldType == typeof(float))
-                {
-                    var attr = GetAttrbute<DecimalPlaces>(fieldInfo);
-                    if (attr != null) stringVal = attr.Convert((float)value);
-                }
-                else if (fieldInfo.FieldType == typeof(double))
-                {
-                    var attr = GetAttrbute<DecimalPlaces>(fieldInfo);
-                    if (attr != null) stringVal = attr.Convert((double)value);
-                }
-                else if (fieldInfo.FieldType == typeof(decimal))
-                {
-                    var attr = GetAttrbute<DecimalPlaces>(fieldInfo);
-                    if (attr != null) stringVal = attr.Convert((decimal)value);
-                }
-                else if (value != null)
+
+                //Check for a decimal places attribute
+                DecimalPlacesAttribute decimalPlaces = null;
+                if (fieldInfo.FieldType.IsFloatingPoint())
+                    decimalPlaces = GetAttrbute<DecimalPlacesAttribute>(fieldInfo);
+
+                if (fieldInfo.FieldType.IsNumeric())
+                    creator.Number(value, decimalPlaces);
+
+                creator.Pair(fieldInfo.Name, value);
+
+
+                //if (fieldInfo.FieldType == typeof(int))
+                //{
+                //    stringVal = value.ToString();
+                //}
+                //else if (fieldInfo.FieldType == typeof(float))
+                //{
+                //    if (attr != null) stringVal = attr.Convert((float)value);
+                //}
+                //else if (fieldInfo.FieldType == typeof(double))
+                //{
+                //    var attr = GetAttrbute<DecimalPlacesAttribute>(fieldInfo);
+                //    if (attr != null) stringVal = attr.Convert((double)value);
+                //}
+                //else if (fieldInfo.FieldType == typeof(decimal))
+                //{
+                //    var attr = GetAttrbute<DecimalPlacesAttribute>(fieldInfo);
+                //    if (attr != null) stringVal = attr.Convert((decimal)value);
+                //}
+                if (value != null)
                 {
                     stringVal = value.ToString();
                 }
                 Console.WriteLine("{0} = {1}", fieldInfo.Name, stringVal);
             }
+
+            creator.EndObject();
+
+            Console.WriteLine(creator.ToString());
 
             if (callbacks != null) callbacks.PostSerialization();
         }
@@ -125,7 +144,7 @@ namespace Pixelbyte.JsonUnity
                 {
                     //Signed ints
                     if (fi.FieldType == typeof(Int64))
-                            fi.SetValue(obj, Convert.ToInt64(parameter));
+                        fi.SetValue(obj, Convert.ToInt64(parameter));
                     else if (fi.FieldType == typeof(Int32))
                         fi.SetValue(obj, Convert.ToInt32(parameter));
                     else if (fi.FieldType == typeof(Int16))
