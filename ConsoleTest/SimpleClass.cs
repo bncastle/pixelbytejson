@@ -4,6 +4,7 @@
     {
         public string name = string.Empty;
         public int age = 0;
+        [DecimalPlaces(2)]
         public float temperature = 0;
         public bool isMale = false;
 

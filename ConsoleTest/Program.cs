@@ -13,7 +13,7 @@ namespace Pixelbyte.JsonUnity
             //TestJsonParser();
             TestDeserialize();
 
-            SimpleClass sc = new SimpleClass() { name = "Fredrick", age = 23, temperature = 36.34f };
+            SimpleClass sc = new SimpleClass() { name = "Fredrick", age = 23, temperature = 36.3476437f };
             Jsonizer.Ser(sc);
 
             //var parser = JSONParser.Parse("{\"Fred\" : \"Ted}");

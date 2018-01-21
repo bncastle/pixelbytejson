@@ -19,6 +19,7 @@ namespace Pixelbyte.JsonUnity
 
         void LineBreak()
         {
+            if (!prettyPrint) return;
             builder.Append('\n');
             for (int i = 0; i < indentLevel; i++)
                 builder.Append('\t');
@@ -27,7 +28,7 @@ namespace Pixelbyte.JsonUnity
         void Indent()
         {
             indentLevel++;
-            if (prettyPrint) LineBreak();
+            LineBreak();
         }
 
         void DeIndent()
@@ -37,7 +38,13 @@ namespace Pixelbyte.JsonUnity
         }
 
         public void BeginObject() { builder.Append('{'); Indent(); }
-        public void EndObject() { DeIndent(); builder.Append('}'); }
+        public void EndObject()
+        {
+            DeIndent();
+            if (builder[builder.Length - 2] == ',')
+                builder.Length = builder.Length - 2;
+            builder.Append(" }");
+        }
 
         public void BeginArray() { builder.Append('['); Indent(); }
         public void EndArray() { DeIndent(); builder.Append(']'); }
@@ -73,6 +80,8 @@ namespace Pixelbyte.JsonUnity
             String(name);
             builder.Append(" : ");
             builder.Append(value.ToString());
+            builder.Append(", ");
+            LineBreak();
         }
 
         public override string ToString() { return builder.ToString(); }
