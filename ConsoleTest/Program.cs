@@ -11,10 +11,23 @@ namespace Pixelbyte.JsonUnity
         static void Main()
         {
             //TestJsonParser();
-            TestDeserialize();
+            //TestDeserialize(); 
 
-            SimpleClass sc = new SimpleClass() { name = "Fredrick", age = 23, temperature = 36.3476437f };
-            Jsonizer.Ser(sc);
+            //SimpleClass sc = new SimpleClass() { name = "Fredrick", age = 23, temperature = 36.3476437f };
+            //string json = Jsonizer.Ser(sc);
+            //Console.WriteLine(json);
+
+            ClassWithClassReference cr = new ClassWithClassReference() { name = "Jalopnik", age = 43, isMale = false, pet = new Animal() { name = "Tortuga", ferocity = Ferocity.Docile }, temperature = 98.6f };
+            string js = Jsonizer.Ser(cr);
+            Console.WriteLine(js);
+
+            //var sc = Jsonizer.Deserialize<ClassWithClassReference>(js);
+            //if (sc != null)
+            //    Console.WriteLine(sc.ToString());
+
+            //TestJsonParser(@"..\..\..\TestClass.json");
+            //TestJsonParser(@"..\..\..\random.json");
+            //TestJsonParser(@"..\..\..\largeArray.json");
 
             //var parser = JSONParser.Parse("{\"Fred\" : \"Ted}");
             //Console.WriteLine(parser.Tokenizer.AllErrors);
@@ -41,13 +54,14 @@ namespace Pixelbyte.JsonUnity
                 Console.WriteLine(sc.ToString());
         }
 
-        private static void TestJsonParser()
+        private static void TestJsonParser(string filename)
         {
-            var jparser = JSONParser.ParseFile(@"..\..\..\TestClass.json");
+            var jparser = JSONParser.ParseFile(filename);
 
             //Show any Tokenizer errors
             if (!jparser.Tokenizer.Successful)
             {
+                Console.WriteLine("====Tokenizer Errors====");
                 foreach (var err in jparser.Tokenizer.Errors)
                 {
                     Console.WriteLine(err);
@@ -55,6 +69,7 @@ namespace Pixelbyte.JsonUnity
             }
             else if (jparser.Successful)
             {
+                Console.WriteLine("====Parser Errors====");
                 foreach (var err in jparser.Errors)
                 {
                     Console.WriteLine(err);

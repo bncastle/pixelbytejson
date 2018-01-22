@@ -1,98 +1,98 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace Pixelbyte.JsonUnity
 {
     // Define other methods and classes here
     public static class Jsonizer
     {
-        static bool IsPublic(FieldInfo field) { return field.IsPublic; }
-        static bool IsPrivate(FieldInfo field) { return field.IsPrivate; }
+        //static Dictionary<Type, SerializationProxy> proxies;
+        //static SerializationProxy defaultProxy;
 
-        static bool HasAttribute<T>(FieldInfo fi) where T : class
+        //static Jsonizer() { proxies = new Dictionary<Type, SerializationProxy>(); defaultProxy = new SerializationProxy(); }
+
+        //public static void AddProxy(Type t, SerializationProxy proxy)
+        //{
+        //    if (proxies.ContainsKey(t))
+        //        throw new ArgumentException(string.Format("Type of {0} already exists in the proxies table!", t.Name));
+        //    else if (proxy == null)
+        //        throw new ArgumentNullException("proxy");
+        //    proxies.Add(t, proxy);
+        //}
+
+        //public static void RemoveProxy(Type t) { proxies.Remove(t); }
+        //public static void ClearProxies() { proxies.Clear(); }
+
+        //static SerializationProxy GetProxyFor(object obj) { if (obj == null) return null; else return GetProxyFor(obj.GetType()); }
+        //static bool HasProxyFor(object obj) { if (obj == null) return false; return HasProxyFor(obj.GetType()); }
+        //static bool HasProxyFor(Type type) { return proxies.ContainsKey(type); }
+
+        //static SerializationProxy GetProxyFor(Type type)
+        //{
+        //    SerializationProxy p;
+        //    if (proxies.TryGetValue(type, out p))
+        //        return p;
+        //    else
+        //        return defaultProxy;
+        //}
+
+        public static string Ser(object obj, bool prettyPrint = true)
         {
-            return fi.GetCustomAttributes(typeof(T), false).Length > 0;
+            JSONCreator creator = new JSONCreator(prettyPrint);
+            Ser(obj, creator);
+            return creator.ToString();
         }
 
-        static T GetAttrbute<T>(FieldInfo fi) where T : class
+        static string Ser(object obj, JSONCreator creator)
         {
-            var attrs = fi.GetCustomAttributes(typeof(T), false);
-            if (attrs.Length == 0) return null;
-            else return attrs[0] as T;
-        }
-
-        //	public static string Ser(object obj)
-        public static void Ser(object obj)
-        {
-            //Object to serialize can't be null
-            //TODO: Or can it?
+            //Object to serialize can't be null [TODO: Or can it?]
             if (obj == null)
                 throw new ArgumentNullException("obj");
 
-            var fi = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
+            Type type = obj.GetType();
             //See if the object implements the Serialization callbacks interface
             var callbacks = obj as ISerializeCallbacks;
+            var serializationControl = obj as ISerializationControl;
 
             if (callbacks != null) callbacks.PreSerialization();
 
-            JSONCreator creator = new JSONCreator(true);
-
-            //For us, any c# object we want to serialize is a JSON object
+            //Traverse the type if it is a derived type we will want any/all fields from its base types as well
             creator.BeginObject();
 
-            foreach (var fieldInfo in fi)
+            while (type != null)
             {
-                //If the field is private or protected we need to check and see if it has an attribute that allows us to include it
-                if (fieldInfo.IsPrivate || fieldInfo.IsFamily)
+                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
                 {
-                    if (!HasAttribute<SerializeField>(fieldInfo)) continue;
+                    //If the field is private or protected we need to check and see if it has an attribute that allows us to include it
+                    //Or if the field should be excluded, then skip it
+                    if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
+                        || field.HasAttribute<JsonExcludeAttribute>())
+                        continue;
+
+                    creator.String(field.Name);
+                    creator.Colon();
+                    var value = field.GetValue(obj);
+
+                    if (creator.ValueSupported(value))
+                        creator.Value(value);
+                    else
+                    {
+                        //Style choice. For now we'll leave the opening curly on the same line
+                        //creator.LineBreak();
+                        Ser(value, creator);
+                    }
+
+                    //Format for another name value pair
+                    creator.Comma();
+                    creator.LineBreak();
                 }
-
-                object value = fieldInfo.GetValue(obj);
-                string stringVal = String.Empty;
-
-                //Check for a decimal places attribute
-                DecimalPlacesAttribute decimalPlaces = null;
-                if (fieldInfo.FieldType.IsFloatingPoint())
-                    decimalPlaces = GetAttrbute<DecimalPlacesAttribute>(fieldInfo);
-
-                if (fieldInfo.FieldType.IsNumeric())
-                    creator.Number(value, decimalPlaces);
-
-                creator.Pair(fieldInfo.Name, value);
-
-
-                //if (fieldInfo.FieldType == typeof(int))
-                //{
-                //    stringVal = value.ToString();
-                //}
-                //else if (fieldInfo.FieldType == typeof(float))
-                //{
-                //    if (attr != null) stringVal = attr.Convert((float)value);
-                //}
-                //else if (fieldInfo.FieldType == typeof(double))
-                //{
-                //    var attr = GetAttrbute<DecimalPlacesAttribute>(fieldInfo);
-                //    if (attr != null) stringVal = attr.Convert((double)value);
-                //}
-                //else if (fieldInfo.FieldType == typeof(decimal))
-                //{
-                //    var attr = GetAttrbute<DecimalPlacesAttribute>(fieldInfo);
-                //    if (attr != null) stringVal = attr.Convert((decimal)value);
-                //}
-                if (value != null)
-                {
-                    stringVal = value.ToString();
-                }
-                Console.WriteLine("{0} = {1}", fieldInfo.Name, stringVal);
+                type = type.BaseType;
             }
-
             creator.EndObject();
-
-            Console.WriteLine(creator.ToString());
-
             if (callbacks != null) callbacks.PostSerialization();
+            return creator.ToString();
         }
 
         public static T Deserialize<T>(string json)
@@ -100,14 +100,12 @@ namespace Pixelbyte.JsonUnity
             var parser = JSONParser.Parse(json);
             if (!parser.Tokenizer.Successful)
             {
-                //TODO: Make custom exception
-                //show all parser errors
+                //TODO: Make custom exception to show all tokenizer errors
                 throw new Exception(parser.Tokenizer.AllErrors);
             }
             else if (!parser.Successful)
             {
-                //TODO: Make custom exception
-                //show all parser errors
+                //TODO: Make custom exception to show all parser errors
                 throw new Exception(parser.AllErrors);
             }
             else if (parser.rootObject == null)
@@ -167,6 +165,16 @@ namespace Pixelbyte.JsonUnity
                         fi.SetValue(obj, Convert.ToDouble(parameter));
                     else if (fi.FieldType == typeof(Single))
                         fi.SetValue(obj, Convert.ToSingle(parameter));
+                    else if (fi.FieldType.IsEnum)
+                        fi.SetValue(obj, Enum.Parse(fi.FieldType, parameter.ToString()));
+                    else if(fi.FieldType == typeof(DateTime))
+                    {
+                        DateTime dateTime;
+                        if (DateTime.TryParse(parameter.ToString(), out dateTime))
+                            fi.SetValue(obj, dateTime);
+                        else
+                            throw new Exception("DateTime value incorrect format: " + parameter.ToString());
+                    }
                     //Other classes
                     else if (parameter is JSONObject)
                         fi.SetValue(obj, Deserialize(parameter as JSONObject, fi.FieldType));

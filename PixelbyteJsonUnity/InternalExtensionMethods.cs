@@ -78,5 +78,17 @@ namespace Pixelbyte.JsonUnity
                 default: return false;
             }
         }
+
+        internal static bool HasAttribute<T>(this FieldInfo fi) where T : class
+        {
+            return fi.GetCustomAttributes(typeof(T), false).Length > 0;
+        }
+
+        internal static T GetFirstAttribute<T>(this FieldInfo fi) where T : class
+        {
+            var attrs = fi.GetCustomAttributes(typeof(T), false);
+            if (attrs.Length == 0) return null;
+            else return attrs[0] as T;
+        }
     }
 }

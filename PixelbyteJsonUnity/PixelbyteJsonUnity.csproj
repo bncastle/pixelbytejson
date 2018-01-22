@@ -41,19 +41,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\DecimalPlaces.cs" />
-    <Compile Include="Attributes\SerializeField.cs" />
+    <Compile Include="Attributes\JsonExcludeAttribute.cs" />
+    <Compile Include="Attributes\JsonIncludeAttribute.cs" />
+    <Compile Include="Attributes\JsonMaxDecimalPlacesAttributeAttribute.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Interfaces\IDeserializationCallbacks.cs" />
+    <Compile Include="Interfaces\ISerializationControl.cs" />
     <Compile Include="Interfaces\ISerializeCallbacks.cs" />
     <Compile Include="InternalExtensionMethods.cs" />
     <Compile Include="JSONCreator.cs" />
-    <Compile Include="Jsonizer.cs" />
     <Compile Include="JSONObject.cs" />
     <Compile Include="JSONPair.cs" />
     <Compile Include="JSONParser.cs" />
     <Compile Include="JSONTokenizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Jsonizer.cs" />
+    <Compile Include="SerializationProxy.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="TokenType.cs" />
   </ItemGroup>
