@@ -38,6 +38,11 @@ namespace Pixelbyte.JsonUnity
             return false;
         }
 
+        internal static bool HasInterface(this Type type, Type interfaceType)
+        {
+            return interfaceType.IsAssignableFrom(type);
+        }
+
         internal static bool IsNullable(this Type type) { return Nullable.GetUnderlyingType(type) != null || !type.IsPrimitive; }
         internal static bool IsNumeric(this Type type) { return IsInteger(type) || IsFloatingPoint(type); }
         internal static bool IsInteger(this Type type)

@@ -1,42 +1,95 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace Pixelbyte.JsonUnity
 {
+    using EncodeCallback = Action<object, JSONCreator>;
+
     // Define other methods and classes here
     public static class Jsonizer
     {
+        //Contains all supported JSON encoders
+        static Dictionary<Type, EncodeCallback> encoders;
+        static EncodeCallback defaultEncoder;
+
         //static Dictionary<Type, SerializationProxy> proxies;
         //static SerializationProxy defaultProxy;
 
-        //static Jsonizer() { proxies = new Dictionary<Type, SerializationProxy>(); defaultProxy = new SerializationProxy(); }
+        static Jsonizer()
+        {
+            encoders = new Dictionary<Type, EncodeCallback>();
+            AddDefaultEncoders();
+        }
 
-        //public static void AddProxy(Type t, SerializationProxy proxy)
-        //{
-        //    if (proxies.ContainsKey(t))
-        //        throw new ArgumentException(string.Format("Type of {0} already exists in the proxies table!", t.Name));
-        //    else if (proxy == null)
-        //        throw new ArgumentNullException("proxy");
-        //    proxies.Add(t, proxy);
-        //}
+        static void AddDefaultEncoders()
+        {
+            defaultEncoder = ((obj, builder) =>
+            {
+                Type type = obj.GetType();
+                builder.BeginObject();
 
-        //public static void RemoveProxy(Type t) { proxies.Remove(t); }
-        //public static void ClearProxies() { proxies.Clear(); }
+                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    //If the field is private or protected we need to check and see if it has an attribute that allows us to include it
+                    //Or if the field should be excluded, then skip it
+                    if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
+                        || field.HasAttribute<JsonExcludeAttribute>())
+                        continue;
 
-        //static SerializationProxy GetProxyFor(object obj) { if (obj == null) return null; else return GetProxyFor(obj.GetType()); }
-        //static bool HasProxyFor(object obj) { if (obj == null) return false; return HasProxyFor(obj.GetType()); }
-        //static bool HasProxyFor(Type type) { return proxies.ContainsKey(type); }
+                    var value = field.GetValue(obj);
+                    EncodePair(field.Name, value, builder);
 
-        //static SerializationProxy GetProxyFor(Type type)
-        //{
-        //    SerializationProxy p;
-        //    if (proxies.TryGetValue(type, out p))
-        //        return p;
-        //    else
-        //        return defaultProxy;
-        //}
+                    //Format for another name value pair
+                    builder.Comma();
+                    builder.LineBreak();
+                }
+                builder.EndObject();
+            });
+
+            AddEncoder<IEnumerable>((obj, builder) =>
+            {
+                builder.BeginArray();
+                builder.LineBreak();
+                foreach (var item in (IEnumerable)obj)
+                {
+                    EncodeValue(item, builder);
+                    builder.Comma();
+                    builder.LineBreak();
+                }
+                builder.EndArray();
+            });
+
+            AddEncoder<IDictionary>((obj, builder) =>
+            {
+                builder.BeginObject();
+                var table = obj as IDictionary;
+                foreach (var key in table.Keys)
+                {
+                    EncodePair(key.ToString(), table[key], builder);
+                    builder.Comma();
+                    builder.LineBreak();
+                }
+                builder.EndObject();
+            });
+        }
+
+        public static void AddEncoder<T>(Action<object, JSONCreator> encodeMethod)
+        {
+            encoders[typeof(T)] = encodeMethod;
+        }
+
+        public static void RemoveEncoder<T>() { encoders.Remove(typeof(T)); }
+        public static bool HasEncoder(object value) { return value != null && encoders.ContainsKey(value.GetType()); }
+
+        public static EncodeCallback GetEncoder(Type type)
+        {
+            EncodeCallback callback;
+            if (encoders.TryGetValue(type, out callback)) return callback;
+            else return defaultEncoder;
+        }
 
         public static string Ser(object obj, bool prettyPrint = true)
         {
@@ -58,39 +111,9 @@ namespace Pixelbyte.JsonUnity
 
             if (callbacks != null) callbacks.PreSerialization();
 
-            //Traverse the type if it is a derived type we will want any/all fields from its base types as well
-            creator.BeginObject();
+            var encodeMethod = GetEncoder(type);
+            encodeMethod(obj, creator);
 
-            while (type != null)
-            {
-                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
-                {
-                    //If the field is private or protected we need to check and see if it has an attribute that allows us to include it
-                    //Or if the field should be excluded, then skip it
-                    if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
-                        || field.HasAttribute<JsonExcludeAttribute>())
-                        continue;
-
-                    creator.String(field.Name);
-                    creator.Colon();
-                    var value = field.GetValue(obj);
-
-                    if (creator.ValueSupported(value))
-                        creator.Value(value);
-                    else
-                    {
-                        //Style choice. For now we'll leave the opening curly on the same line
-                        //creator.LineBreak();
-                        Ser(value, creator);
-                    }
-
-                    //Format for another name value pair
-                    creator.Comma();
-                    creator.LineBreak();
-                }
-                type = type.BaseType;
-            }
-            creator.EndObject();
             if (callbacks != null) callbacks.PostSerialization();
             return creator.ToString();
         }
@@ -116,6 +139,36 @@ namespace Pixelbyte.JsonUnity
             else
             {
                 return Deserialize<T>(parser.rootObject);
+            }
+        }
+
+        static void EncodePair(string name, object value, JSONCreator builder)
+        {
+            builder.String(name);
+            builder.Colon();
+            EncodeValue(value, builder);
+        }
+
+        static void EncodeValue(object value, JSONCreator builder)
+        {
+            if (builder.ValueSupported(value))
+                builder.Value(value);
+            else
+            {
+                var type = value.GetType();
+
+                EncodeCallback encode = null;
+                //Try a dictionary first
+                if (type.HasInterface(typeof(IDictionary)))
+                    encode = GetEncoder(typeof(IDictionary));
+                else if (type.HasInterface(typeof(IEnumerable)))
+                    encode = GetEncoder(typeof(IEnumerable));
+                else
+                    encode = GetEncoder(value.GetType());
+                if (encode != null)
+                    encode(value, builder);
+                else
+                    Ser(value, builder);
             }
         }
 
@@ -167,7 +220,7 @@ namespace Pixelbyte.JsonUnity
                         fi.SetValue(obj, Convert.ToSingle(parameter));
                     else if (fi.FieldType.IsEnum)
                         fi.SetValue(obj, Enum.Parse(fi.FieldType, parameter.ToString()));
-                    else if(fi.FieldType == typeof(DateTime))
+                    else if (fi.FieldType == typeof(DateTime))
                     {
                         DateTime dateTime;
                         if (DateTime.TryParse(parameter.ToString(), out dateTime))
@@ -178,6 +231,8 @@ namespace Pixelbyte.JsonUnity
                     //Other classes
                     else if (parameter is JSONObject)
                         fi.SetValue(obj, Deserialize(parameter as JSONObject, fi.FieldType));
+
+                    //TOOD: Enable decoding arrays, lists, dictionaries
                     //strings, booleans
                     else
                         fi.SetValue(obj, parameter);

@@ -141,9 +141,7 @@ namespace Pixelbyte.JsonUnity
             }
             else if (PeekToken.Kind == TokenType.OpenBracket)
             {
-                throw new Exception();
-                //TODO: 
-                // return new JSONPair(pairName, ParseArray());
+                return new JSONPair(pairName, ParseArray());
             }
             else
             {
@@ -222,10 +220,11 @@ namespace Pixelbyte.JsonUnity
                     LogError("Unexpected ':'", PeekToken, false);
                 }
 
-                if (PeekToken == null || PeekToken.Kind == TokenType.CloseBracket) break;
-
                 NextToken();
 
+                if (PeekToken == null || PeekToken.Kind == TokenType.CloseBracket) break;
+
+                //No closing bracket? then expect a comma
                 if (PeekToken.Kind != TokenType.Comma)
                 {
                     LogError("Expected a ,", PeekToken, false);

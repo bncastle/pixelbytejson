@@ -21,9 +21,9 @@ namespace Pixelbyte.JsonUnity
             string js = Jsonizer.Ser(cr);
             Console.WriteLine(js);
 
-            //var sc = Jsonizer.Deserialize<ClassWithClassReference>(js);
-            //if (sc != null)
-            //    Console.WriteLine(sc.ToString());
+            var sc = Jsonizer.Deserialize<ClassWithClassReference>(js);
+            if (sc != null)
+                Console.WriteLine(sc.ToString());
 
             //TestJsonParser(@"..\..\..\TestClass.json");
             //TestJsonParser(@"..\..\..\random.json");

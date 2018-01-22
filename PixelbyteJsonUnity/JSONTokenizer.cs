@@ -183,7 +183,11 @@ namespace Pixelbyte.JsonUnity
 
         char NextChar()
         {
-            column++;
+            //Assume tabs are 4 spaces
+            if (json[index] == '\t')
+                column += 4;
+            else
+                column++;
             if (json[index] == '\n')
             {
                 column = 1;
@@ -207,7 +211,7 @@ namespace Pixelbyte.JsonUnity
 
         void EatWhiteSpace() { while (!EOF() && WHITESPACE.Contains(Peek())) NextChar(); }
 
-        bool IsNonValueCharacter(char c) { return NONVALUECHARS.Contains(c); }
+        bool IsNonValueCharacter(char c) { return NONVALUECHARS.Contains(c) || WHITESPACE.Contains(c); }
 
         string ReadValue()
         {

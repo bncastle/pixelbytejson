@@ -41,6 +41,7 @@ namespace Pixelbyte.JsonUnity
         public float temperature = 0;
         public bool isMale = false;
         public Animal pet = null;
+        public Dictionary<string, int> numbers = new Dictionary<string, int>() { { "fiver", 5 }, { "sixer", 6 }, { "severner", 7 } };
         public List<string> stuffs = new List<string>() {"fredro", "norbo", "rendro"};
 
         public void OnDeserialized()

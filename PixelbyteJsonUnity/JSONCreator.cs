@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace Pixelbyte.JsonUnity
 {
-    class JSONCreator
+    public class JSONCreator
     {
         StringBuilder builder;
         bool prettyPrint;
+        bool startOfLine = true;
         int indentLevel;
 
         public JSONCreator(bool prettyPrint)
@@ -21,35 +23,54 @@ namespace Pixelbyte.JsonUnity
         {
             if (!prettyPrint) return;
             builder.Append('\n');
-            for (int i = 0; i < indentLevel; i++)
-                builder.Append('\t');
+            startOfLine = true;
+
         }
 
         void Indent()
         {
-            indentLevel++;
-            LineBreak();
+            if (!startOfLine) return;
+            startOfLine = false;
+            for (int i = 0; i < indentLevel; i++)
+                builder.Append('\t');
         }
 
         void DeIndent()
         {
+            if (!startOfLine) return;
             builder.Length = builder.Length - indentLevel;
             indentLevel--;
         }
 
-        public void BeginObject() { builder.Append('{'); Indent(); }
+        public void BeginObject(bool newline = true) { Indent(); builder.Append('{'); indentLevel++; if (newline) LineBreak(); }
         public void EndObject()
         {
-            DeIndent();
-            //There will also be a space after the comma so we include that too
+            indentLevel--;
+            ////There will also be a space after the comma so we include that too
             if (builder[builder.Length - 3] == ',')
+            {
                 builder.Length = builder.Length - 3;
-            LineBreak();
+                LineBreak();
+            }
+            Indent();
+
             builder.Append("}");
         }
 
-        public void BeginArray() { builder.Append('['); Indent(); }
-        public void EndArray() { DeIndent(); builder.Append(']'); }
+        public void BeginArray() { builder.Append('['); indentLevel++; }
+        public void EndArray()
+        {
+            indentLevel--;
+            ////There will also be a space after the comma so we include that too
+            if (builder[builder.Length - 3] == ',')
+            {
+                builder.Length = builder.Length - 3;
+                LineBreak();
+            }
+            Indent();
+
+            builder.Append("]");
+        }
 
         public void Colon() { builder.Append(" : "); }
         public void Comma() { builder.Append(", "); }
@@ -87,6 +108,7 @@ namespace Pixelbyte.JsonUnity
 
         public void String(string text)
         {
+            Indent();
             //Quote the string and also look for any escape characters  since we'll need to escape them again
             builder.Append('"');
             for (int i = 0; i < text.Length; i++)
@@ -129,6 +151,20 @@ namespace Pixelbyte.JsonUnity
                 }
             }
             builder.Append('"');
+        }
+
+        public void List(IList list)
+        {
+            if (list.Count == 0) builder.Append("[]");
+            else
+            {
+                foreach (var item in list)
+                {
+                    BeginArray();
+                    //
+                    EndArray();
+                }
+            }
         }
 
         public void Pair(string name, string value)
