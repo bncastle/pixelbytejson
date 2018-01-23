@@ -44,7 +44,6 @@
     <Compile Include="Attributes\JsonExcludeAttribute.cs" />
     <Compile Include="Attributes\JsonIncludeAttribute.cs" />
     <Compile Include="Attributes\JsonMaxDecimalPlacesAttributeAttribute.cs" />
-    <Compile Include="Container.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Interfaces\IDeserializationCallbacks.cs" />
     <Compile Include="Interfaces\ISerializationControl.cs" />

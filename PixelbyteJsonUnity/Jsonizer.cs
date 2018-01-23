@@ -13,9 +13,9 @@ namespace Pixelbyte.JsonUnity
     public static class Jsonizer
     {
         //Contains all supported JSON encoders
-        static Container<Type, EncodeCallback> encoders;
-        static Container<Type, DecodeCallback> decoders;
-        //static EncodeCallback defaultEncoder;
+        static Dictionary<Type, EncodeCallback> encoders;
+        static Dictionary<Type, DecodeCallback> decoders;
+        static EncodeCallback defaultEncoder;
         static DecodeCallback defaultDecoder;
 
         //static Dictionary<Type, SerializationProxy> proxies;
@@ -23,14 +23,14 @@ namespace Pixelbyte.JsonUnity
 
         static Jsonizer()
         {
-            encoders = new Container<Type, EncodeCallback>();
-            decoders = new Container<Type, DecodeCallback>();
+            encoders = new Dictionary<Type, EncodeCallback>();
+            decoders = new Dictionary<Type, DecodeCallback>();
             AddDefaults();
         }
 
         static void AddDefaults()
         {
-            encoders.SetDefaultValue((obj, builder) =>
+            defaultEncoder = ((obj, builder) =>
             {
                 Type type = obj.GetType();
                 builder.BeginObject();
@@ -53,7 +53,8 @@ namespace Pixelbyte.JsonUnity
                 builder.EndObject();
             });
 
-            encoders.Add(typeof(IEnumerable), (obj, builder) =>
+
+            AddEncoder(typeof(IEnumerable), (obj, builder) =>
             {
                 builder.BeginArray();
                 builder.LineBreak();
@@ -66,7 +67,7 @@ namespace Pixelbyte.JsonUnity
                 builder.EndArray();
             });
 
-            encoders.Add(typeof(IDictionary), (obj, builder) =>
+            AddEncoder(typeof(IDictionary), (obj, builder) =>
              {
                  builder.BeginObject();
                  var table = obj as IDictionary;
@@ -79,7 +80,7 @@ namespace Pixelbyte.JsonUnity
                  builder.EndObject();
              });
 
-            decoders.Add(typeof(IDictionary), (jsonObj, type) =>
+            AddDecoder(typeof(IDictionary), (jsonObj, type) =>
             {
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
@@ -91,7 +92,8 @@ namespace Pixelbyte.JsonUnity
                 }
                 return obj;
             });
-            decoders.SetDefaultValue((jsonObj, type) =>
+
+            defaultDecoder = ((jsonObj, type) =>
             {
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
@@ -157,9 +159,9 @@ namespace Pixelbyte.JsonUnity
                             var childObj = parameter as JSONObject;
                             DecodeCallback decoder = null;
                             if (fi.FieldType.HasInterface(typeof(IDictionary)))
-                                decoder = decoders[typeof(IDictionary)];
+                                decoder = GetDecoder(typeof(IDictionary));
                             else
-                                decoder = decoders[fi.FieldType];
+                                decoder = GetDecoderOrDefault(fi.FieldType);
 
                             var decodedObj = decoder(childObj, fi.FieldType);
                             fi.SetValue(obj, decodedObj);
@@ -177,6 +179,18 @@ namespace Pixelbyte.JsonUnity
             });
 
         }
+
+        public static void AddDecoder(Type type, DecodeCallback decodeFunc) { decoders.Add(type, decodeFunc); }
+        public static void RemoveDecoder(Type type) { decoders.Remove(type); }
+        static DecodeCallback GetDecoder(Type type) { DecodeCallback callback = null; decoders.TryGetValue(type, out callback); return callback; }
+        static DecodeCallback GetDecoderOrDefault(Type type) { DecodeCallback callback = GetDecoder(type); if (callback == null) callback = defaultDecoder; return callback; }
+        public static void ClearDecoders() { decoders.Clear(); }
+
+        public static void AddEncoder(Type type, EncodeCallback encodeFunc) { encoders.Add(type, encodeFunc); }
+        public static void RemoveEncoder(Type type) { encoders.Remove(type); }
+        static EncodeCallback GetEncoder(Type type) { EncodeCallback callback = null; encoders.TryGetValue(type, out callback); return callback; }
+        static EncodeCallback GetEncoderOrDefault(Type type) { EncodeCallback callback = GetEncoder(type); if (callback == null) callback = defaultEncoder; return callback; }
+        public static void ClearEncoders() { encoders.Clear(); }
 
         public static string Ser(object obj, bool prettyPrint = true)
         {
@@ -198,7 +212,7 @@ namespace Pixelbyte.JsonUnity
 
             if (callbacks != null) callbacks.PreSerialization();
 
-            var encodeMethod = encoders[type];
+            var encodeMethod = GetEncoderOrDefault(type);
             encodeMethod(obj, creator);
 
             if (callbacks != null) callbacks.PostSerialization();
@@ -247,11 +261,11 @@ namespace Pixelbyte.JsonUnity
                 EncodeCallback encode = null;
                 //Try a dictionary first
                 if (type.HasInterface(typeof(IDictionary)))
-                    encode = encoders[typeof(IDictionary)];
+                    encode = GetEncoder(typeof(IDictionary));
                 else if (type.HasInterface(typeof(IEnumerable)))
-                    encode = encoders[typeof(IEnumerable)];
+                    encode = GetEncoder(typeof(IEnumerable));
                 else
-                    encode = encoders[value.GetType()];
+                    encode = GetEncoder(value.GetType());
                 if (encode != null)
                     encode(value, builder);
                 else
@@ -263,7 +277,7 @@ namespace Pixelbyte.JsonUnity
         {
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
-            var decoder = decoders[type];
+            var decoder = GetDecoderOrDefault(type);
             //See if this object implements the Deserialization callback interface
             var decodedObject = decoder(jsonObj, type);
             var callbacks = decodedObject as IDeserializationCallbacks;
