@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace Pixelbyte.JsonUnity
@@ -17,13 +18,32 @@ namespace Pixelbyte.JsonUnity
             //string json = Jsonizer.Ser(sc);
             //Console.WriteLine(json);
 
-            ClassWithClassReference cr = new ClassWithClassReference() { name = "Jalopnik", age = 43, isMale = false, pet = new Animal() { name = "Tortuga", ferocity = Ferocity.Docile }, temperature = 98.6f };
-            string js = Jsonizer.Serialize(cr);
-            Console.WriteLine(js);
+            //ClassWithClassReference cr = new ClassWithClassReference() { name = "Jalopnik", age = 43, isMale = false, pet = new Animal() { name = "Tortuga", ferocity = Ferocity.Docile }, temperature = 98.6f };
+            //string js = Jsonizer.Serialize(cr);
+            //Console.WriteLine(js);
 
-            var sc = Jsonizer.Deserialize<ClassWithClassReference>(js);
-            if (sc != null)
-                Console.WriteLine(sc.ToString());
+            //var sc = Jsonizer.Deserialize<ClassWithClassReference>(js);
+            //if (sc != null)
+            //    Console.WriteLine(sc.ToString());
+
+            JSONEncoder.SetTypeEncoder(typeof(Bounds), (obj, builder) =>
+            {
+                var type = obj.GetType();
+                var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+                builder.BeginObject();
+                foreach (var field in fields)
+                {
+                    builder.EncodePair(field.Name, field.GetValue(obj));
+                    builder.Comma();
+                    builder.LineBreak();
+                }
+                builder.EndObject();
+            });
+
+            Bounds b = new Bounds(23.5f, 54.0f, 120.0f, 64.1f);
+            string bounds = JSONEncoder.Encode(b);
+            Console.WriteLine(bounds);
 
             //TestJsonParser(@"..\..\..\TestJsonFiles\TestClass.json");
             //TestJsonParser(@"..\..\..\TestJsonFiles\ClassWithClassReference.json");
@@ -50,7 +70,7 @@ namespace Pixelbyte.JsonUnity
                 json = sr.ReadToEnd();
             }
 
-            var sc = Jsonizer.Deserialize<ClassWithClassReference>(json);
+            var sc = JSONDecoder.Decode<ClassWithClassReference>(json);
             if (sc != null)
                 Console.WriteLine(sc.ToString());
         }

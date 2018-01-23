@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace Pixelbyte.JsonUnity
@@ -9,18 +10,69 @@ namespace Pixelbyte.JsonUnity
     /// <summary>
     /// Helps with building the JSON string when we serialize a class
     /// </summary>
-    public class JSONCreator
+    public class JSONEncoder
     {
+        public delegate void EncodeCallback(object obj, JSONEncoder encoder);
+
+        //Contains all supported JSON encoders
+        static Dictionary<Type, EncodeCallback> typeEncoders;
+        static EncodeCallback defaultTypeEncoder;
+
         StringBuilder builder;
         bool prettyPrint;
         bool startOfLine = true;
         int indentLevel;
 
-        public JSONCreator(bool prettyPrint)
+        static JSONEncoder() { typeEncoders = new Dictionary<Type, EncodeCallback>(); AddDefaults(); }
+
+        #region Static Encoder Methods
+
+        public static void SetTypeEncoder(Type type, EncodeCallback encodeFunc) { typeEncoders[type] = encodeFunc; }
+        public static void RemoveTypeEncoder(Type type) { typeEncoders.Remove(type); }
+        public static void ClearTypeEncoders() { typeEncoders.Clear(); }
+        public EncodeCallback GetTypeEncoder(Type type) { EncodeCallback callback = null; typeEncoders.TryGetValue(type, out callback); return callback; }
+        public EncodeCallback GetTypeEncoderOrDefault(Type type) { EncodeCallback callback = GetTypeEncoder(type); if (callback == null) callback = defaultTypeEncoder; return callback; }
+
+        #endregion
+
+        public JSONEncoder(bool prettyPrint)
         {
             builder = new StringBuilder();
             this.prettyPrint = prettyPrint;
+
         }
+
+        #region Encode methods
+
+        public static string Encode(object obj, bool prettyPrint = true)
+        {
+            JSONEncoder creator = new JSONEncoder(prettyPrint);
+            Encode(obj, creator);
+            return creator.ToString();
+        }
+
+        static string Encode(object obj, JSONEncoder creator)
+        {
+            //Object to serialize can't be null [TODO: Or can it?]
+            if (obj == null)
+                throw new ArgumentNullException("obj");
+
+            Type type = obj.GetType();
+            //See if the object implements the Serialization callbacks interface
+            var callbacks = obj as ISerializeCallbacks;
+            var serializationControl = obj as ISerializationControl;
+
+            if (callbacks != null) callbacks.PreSerialization();
+
+            var encodeMethod = creator.GetTypeEncoderOrDefault(type);
+            encodeMethod(obj, creator);
+
+            if (callbacks != null) callbacks.PostSerialization();
+            return creator.ToString();
+        }
+        #endregion
+
+        #region JSON text output methods
 
         public void LineBreak()
         {
@@ -50,7 +102,7 @@ namespace Pixelbyte.JsonUnity
         {
             indentLevel--;
             ////There will also be a space after the comma so we include that too
-            if (builder[builder.Length - 3] == ',')
+            if (builder.Length > 3 && builder[builder.Length - 3] == ',')
             {
                 builder.Length = builder.Length - 3;
                 LineBreak();
@@ -97,7 +149,6 @@ namespace Pixelbyte.JsonUnity
         {
             return (value == null || value is bool || value is string || value is DateTime || value.GetType().IsEnum || value is char || value.GetType().IsNumeric());
         }
-
 
         public void Number(object number)
         {
@@ -156,33 +207,89 @@ namespace Pixelbyte.JsonUnity
             builder.Append('"');
         }
 
-        public void List(IList list)
-        {
-            if (list.Count == 0) builder.Append("[]");
-            else
-            {
-                foreach (var item in list)
-                {
-                    BeginArray();
-                    //
-                    EndArray();
-                }
-            }
-        }
-
-        public void Pair(string name, string value)
+        public void EncodePair(string name, object value)
         {
             String(name);
-            builder.Append(" : ");
-
-            if (string.IsNullOrEmpty(value))
-                Null();
-            else
-                builder.Append(value);
-            builder.Append(", ");
-            LineBreak();
+            Colon();
+            EncodeValue(value);
         }
 
+        public void EncodeValue(object value)
+        {
+            if (ValueSupported(value))
+                Value(value);
+            else
+            {
+                var type = value.GetType();
+
+                EncodeCallback encode = null;
+                //Try a dictionary first
+                if (type.HasInterface(typeof(IDictionary)))
+                    encode = GetTypeEncoder(typeof(IDictionary));
+                else if (type.HasInterface(typeof(IEnumerable)))
+                    encode = GetTypeEncoder(typeof(IEnumerable));
+                else
+                    encode = GetTypeEncoder(value.GetType());
+                if (encode != null)
+                    encode(value, this);
+                else
+                    Encode(value, this);
+            }
+        }
+        #endregion
+
         public override string ToString() { return builder.ToString(); }
+
+        static void AddDefaults()
+        {
+            defaultTypeEncoder = ((obj, builder) =>
+            {
+                Type type = obj.GetType();
+                builder.BeginObject();
+
+                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    //If the field is private or protected we need to check and see if it has an attribute that allows us to include it
+                    //Or if the field should be excluded, then skip it
+                    if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
+                        || field.HasAttribute<JsonExcludeAttribute>())
+                        continue;
+
+                    var value = field.GetValue(obj);
+                    builder.EncodePair(field.Name, value);
+
+                    //Format for another name value pair
+                    builder.Comma();
+                    builder.LineBreak();
+                }
+                builder.EndObject();
+            });
+
+            SetTypeEncoder(typeof(IEnumerable), (obj, builder) =>
+            {
+                builder.BeginArray();
+                builder.LineBreak();
+                foreach (var item in (IEnumerable)obj)
+                {
+                    builder.EncodeValue(item);
+                    builder.Comma();
+                    builder.LineBreak();
+                }
+                builder.EndArray();
+            });
+
+            SetTypeEncoder(typeof(IDictionary), (obj, builder) =>
+            {
+                builder.BeginObject();
+                var table = obj as IDictionary;
+                foreach (var key in table.Keys)
+                {
+                    builder.EncodePair(key.ToString(), table[key]);
+                    builder.Comma();
+                    builder.LineBreak();
+                }
+                builder.EndObject();
+            });
+        }
     }
 }

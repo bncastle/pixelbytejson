@@ -2,85 +2,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.Serialization;
 
 namespace Pixelbyte.JsonUnity
 {
-    using EncodeCallback = Action<object, JSONCreator>;
-    using DecodeCallback = Func<Type, JSONObject, object>;
-
     // Define other methods and classes here
-    public static class Jsonizer
+    public static class JSONDecoder
     {
-        //Contains all supported JSON encoders
-        static Dictionary<Type, EncodeCallback> encoders;
+        public delegate object DecodeCallback(Type targetType, JSONObject jsonObj);
         static Dictionary<Type, DecodeCallback> decoders;
-        static EncodeCallback defaultEncoder;
         static DecodeCallback defaultDecoder;
 
-        //static Dictionary<Type, SerializationProxy> proxies;
-        //static SerializationProxy defaultProxy;
-
-        static Jsonizer()
+        static JSONDecoder()
         {
-            encoders = new Dictionary<Type, EncodeCallback>();
             decoders = new Dictionary<Type, DecodeCallback>();
             AddDefaults();
         }
 
         static void AddDefaults()
         {
-            defaultEncoder = ((obj, builder) =>
-            {
-                Type type = obj.GetType();
-                builder.BeginObject();
-
-                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                {
-                    //If the field is private or protected we need to check and see if it has an attribute that allows us to include it
-                    //Or if the field should be excluded, then skip it
-                    if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
-                        || field.HasAttribute<JsonExcludeAttribute>())
-                        continue;
-
-                    var value = field.GetValue(obj);
-                    EncodePair(field.Name, value, builder);
-
-                    //Format for another name value pair
-                    builder.Comma();
-                    builder.LineBreak();
-                }
-                builder.EndObject();
-            });
-
-
-            AddEncoder(typeof(IEnumerable), (obj, builder) =>
-            {
-                builder.BeginArray();
-                builder.LineBreak();
-                foreach (var item in (IEnumerable)obj)
-                {
-                    EncodeValue(item, builder);
-                    builder.Comma();
-                    builder.LineBreak();
-                }
-                builder.EndArray();
-            });
-
-            AddEncoder(typeof(IDictionary), (obj, builder) =>
-             {
-                 builder.BeginObject();
-                 var table = obj as IDictionary;
-                 foreach (var key in table.Keys)
-                 {
-                     EncodePair(key.ToString(), table[key], builder);
-                     builder.Comma();
-                     builder.LineBreak();
-                 }
-                 builder.EndObject();
-             });
-
-            AddDecoder(typeof(IDictionary), (type, jsonObj) =>
+            SetDecoder(typeof(IDictionary), (type, jsonObj) =>
             {
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
@@ -96,7 +36,7 @@ namespace Pixelbyte.JsonUnity
                 return obj;
             });
 
-            AddDecoder(typeof(IList), (type, jsonObj) =>
+            SetDecoder(typeof(IList), (type, jsonObj) =>
             {
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
                 if (!jsonObj.IsArray) throw new ArgumentException("jsonObj: Expected a rootArray!");
@@ -114,14 +54,14 @@ namespace Pixelbyte.JsonUnity
                 return newList;
             });
 
-            AddDecoder(typeof(Array), (type, jsonObj) =>
+            SetDecoder(typeof(Array), (type, jsonObj) =>
             {
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
                 if (!jsonObj.IsArray) throw new ArgumentException("jsonObj: Expected a rootArray!");
 
                 Type arrayElementType = type.GetElementType();
                 bool nullable = arrayElementType.IsNullable();
-                var newArray = Array.CreateInstance(arrayElementType,  jsonObj.rootArray.Count);
+                var newArray = Array.CreateInstance(arrayElementType, jsonObj.rootArray.Count);
 
                 for (int i = 0; i < jsonObj.rootArray.Count; i++)
                 {
@@ -163,7 +103,7 @@ namespace Pixelbyte.JsonUnity
 
         #region Decoder Methods
 
-        public static void AddDecoder(Type type, DecodeCallback decodeFunc) { decoders.Add(type, decodeFunc); }
+        public static void SetDecoder(Type type, DecodeCallback decodeFunc) { decoders[type] = decodeFunc; }
         public static void RemoveDecoder(Type type) { decoders.Remove(type); }
         static DecodeCallback GetDecoder(Type type) { DecodeCallback callback = null; decoders.TryGetValue(type, out callback); return callback; }
         static DecodeCallback GetDecoderOrDefault(Type type) { DecodeCallback callback = GetDecoder(type); if (callback == null) callback = defaultDecoder; return callback; }
@@ -171,44 +111,7 @@ namespace Pixelbyte.JsonUnity
 
         #endregion
 
-        #region Encoder Methods
-
-        public static void AddEncoder(Type type, EncodeCallback encodeFunc) { encoders.Add(type, encodeFunc); }
-        public static void RemoveEncoder(Type type) { encoders.Remove(type); }
-        static EncodeCallback GetEncoder(Type type) { EncodeCallback callback = null; encoders.TryGetValue(type, out callback); return callback; }
-        static EncodeCallback GetEncoderOrDefault(Type type) { EncodeCallback callback = GetEncoder(type); if (callback == null) callback = defaultEncoder; return callback; }
-        public static void ClearEncoders() { encoders.Clear(); }
-
-        #endregion
-
-        public static string Serialize(object obj, bool prettyPrint = true)
-        {
-            JSONCreator creator = new JSONCreator(prettyPrint);
-            Serialize(obj, creator);
-            return creator.ToString();
-        }
-
-        static string Serialize(object obj, JSONCreator creator)
-        {
-            //Object to serialize can't be null [TODO: Or can it?]
-            if (obj == null)
-                throw new ArgumentNullException("obj");
-
-            Type type = obj.GetType();
-            //See if the object implements the Serialization callbacks interface
-            var callbacks = obj as ISerializeCallbacks;
-            var serializationControl = obj as ISerializationControl;
-
-            if (callbacks != null) callbacks.PreSerialization();
-
-            var encodeMethod = GetEncoderOrDefault(type);
-            encodeMethod(obj, creator);
-
-            if (callbacks != null) callbacks.PostSerialization();
-            return creator.ToString();
-        }
-
-        public static T Deserialize<T>(string json)
+        public static T Decode<T>(string json)
         {
             var parser = JSONParser.Parse(json);
             if (!parser.Tokenizer.Successful)
@@ -229,11 +132,11 @@ namespace Pixelbyte.JsonUnity
             else
             {
                 //Ok then, try to Deserialize
-                return (T)Deserialize(parser.rootObject, typeof(T));
+                return (T)Decode(parser.rootObject, typeof(T));
             }
         }
 
-        static object Deserialize(JSONObject jsonObj, Type type)
+        static object Decode(JSONObject jsonObj, Type type)
         {
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
@@ -248,37 +151,7 @@ namespace Pixelbyte.JsonUnity
             return decodedObject;
         }
 
-        #region Value Encode/Decode Methods
-
-        static void EncodePair(string name, object value, JSONCreator builder)
-        {
-            builder.String(name);
-            builder.Colon();
-            EncodeValue(value, builder);
-        }
-
-        static void EncodeValue(object value, JSONCreator builder)
-        {
-            if (builder.ValueSupported(value))
-                builder.Value(value);
-            else
-            {
-                var type = value.GetType();
-
-                EncodeCallback encode = null;
-                //Try a dictionary first
-                if (type.HasInterface(typeof(IDictionary)))
-                    encode = GetEncoder(typeof(IDictionary));
-                else if (type.HasInterface(typeof(IEnumerable)))
-                    encode = GetEncoder(typeof(IEnumerable));
-                else
-                    encode = GetEncoder(value.GetType());
-                if (encode != null)
-                    encode(value, builder);
-                else
-                    Serialize(value, builder);
-            }
-        }
+        #region Value Decode Methods
 
         static object DecodeValue(object value, Type toType)
         {
@@ -348,7 +221,7 @@ namespace Pixelbyte.JsonUnity
                 return decoder(toType, new JSONObject(childObj));
             }
             return value;
-        } 
+        }
         #endregion
     }
 }

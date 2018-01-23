@@ -3,6 +3,26 @@ using System.Collections.Generic;
 
 namespace Pixelbyte.JsonUnity
 {
+    internal struct Bounds
+    {
+        private float x;
+        private float y;
+        private float width;
+        private float height;
+        public float Width { get { return width; } }
+        public float Height { get { return height; } }
+        public float X { get { return x; } }
+        public float Y { get { return y; } }
+
+        public Bounds(float xx, float yy, float w, float h)
+        {
+            x = xx;
+            y = yy;
+            width = w;
+            height = h;
+        }
+    }
+
     internal class SimpleClass
     {
         public string name = string.Empty;
