@@ -16,7 +16,6 @@ namespace Pixelbyte.JsonUnity
         //This Parsed result, if no errors, will either be
         //a JsonObject, or an array
         public JSONObject rootObject;
-        public List<object> rootArray;
 
         public JSONTokenizer Tokenizer { get { return tokenizer; } }
 
@@ -251,7 +250,10 @@ namespace Pixelbyte.JsonUnity
             else if (PeekToken.Kind == TokenType.OpenCurly)
                 rootObject = ParseObject();
             else if (PeekToken.Kind == TokenType.OpenBracket)
-                rootArray = ParseArray();
+            {
+                var rootArray = ParseArray();
+                rootObject = new JSONObject(rootArray);
+            }
         }
 
         void LogError(string text, Token tok = null, bool showtoken = true)

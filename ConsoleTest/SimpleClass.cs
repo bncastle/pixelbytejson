@@ -42,11 +42,16 @@ namespace Pixelbyte.JsonUnity
         public bool isMale = false;
         public Animal pet = null;
         public Dictionary<string, int> numbers = new Dictionary<string, int>() { { "fiver", 5 }, { "sixer", 6 }, { "severner", 7 } };
-        public List<string> stuffs = new List<string>() {"fredro", "norbo", "rendro"};
+        public List<string> aList = new List<string>() {"fredro", "norbo", "rendro"};
+        public string[] anArray = new string[] { "fredro", "norbo", "rendro" };
+        private string shouldNotBeSeen = "nope";
+
+        [JsonInclude]
+        private string doThisOne = "It is done!";
 
         public void OnDeserialized()
         {
-            System.Console.WriteLine("Deserialized!");
+            System.Console.WriteLine("Deserialized a ClassWithClassReference");
         }
 
         public override string ToString()

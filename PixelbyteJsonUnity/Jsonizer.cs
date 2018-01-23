@@ -7,7 +7,7 @@ using System.Runtime.Serialization;
 namespace Pixelbyte.JsonUnity
 {
     using EncodeCallback = Action<object, JSONCreator>;
-    using DecodeCallback = Func<JSONObject, Type, object>;
+    using DecodeCallback = Func<Type, JSONObject, object>;
 
     // Define other methods and classes here
     public static class Jsonizer
@@ -80,27 +80,62 @@ namespace Pixelbyte.JsonUnity
                  builder.EndObject();
              });
 
-            AddDecoder(typeof(IDictionary), (jsonObj, type) =>
+            AddDecoder(typeof(IDictionary), (type, jsonObj) =>
             {
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
-                var obj = Activator.CreateInstance(type) as IDictionary;
+                var obj = Activator.CreateInstance(type, true) as IDictionary;
+
+                //Get the value type of a generic dictionary
+                Type valueType = type.GetGenericArguments()[1];
 
                 foreach (var kv in jsonObj)
                 {
-                    obj.Add(kv.Key, kv.Value);
+                    obj.Add(kv.Key, DecodeValue(kv.Value, valueType));
                 }
                 return obj;
             });
 
-            defaultDecoder = ((jsonObj, type) =>
+            AddDecoder(typeof(IList), (type, jsonObj) =>
+            {
+                if (jsonObj == null) throw new ArgumentNullException("jsonObj");
+                if (!jsonObj.IsArray) throw new ArgumentException("jsonObj: Expected a rootArray!");
+
+                //Get the value type of the generic enumerable
+                Type listElementType = type.GetGenericArguments()[0];
+
+                var newList = Activator.CreateInstance(type, true) as IList;
+
+                for (int i = 0; i < jsonObj.rootArray.Count; i++)
+                {
+                    newList.Add(DecodeValue(jsonObj.rootArray[i], listElementType));
+                }
+
+                return newList;
+            });
+
+            AddDecoder(typeof(Array), (type, jsonObj) =>
+            {
+                if (jsonObj == null) throw new ArgumentNullException("jsonObj");
+                if (!jsonObj.IsArray) throw new ArgumentException("jsonObj: Expected a rootArray!");
+
+                Type arrayElementType = type.GetElementType();
+                bool nullable = arrayElementType.IsNullable();
+                var newArray = Array.CreateInstance(arrayElementType,  jsonObj.rootArray.Count);
+
+                for (int i = 0; i < jsonObj.rootArray.Count; i++)
+                {
+                    var value = DecodeValue(jsonObj.rootArray[i], arrayElementType);
+                    if (value != null || nullable) newArray.SetValue(value, i);
+                }
+                return newArray;
+            });
+
+            defaultDecoder = ((type, jsonObj) =>
             {
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
-                var obj = Activator.CreateInstance(type);
-
-                //See if this object implements the Deserialization callback interface
-                var callbacks = obj as IDeserializationCallbacks;
+                var obj = Activator.CreateInstance(type, true);
 
                 var fieldInfos = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
@@ -112,68 +147,15 @@ namespace Pixelbyte.JsonUnity
                 {
                     //Look for the field name in the json object's data
                     var parameter = jsonObj[fi.Name];
-                    if (parameter != null)
+                    if (parameter == null && !jsonObj.KeyExists(fi.Name))
                     {
-                        //Signed ints
-                        if (fi.FieldType == typeof(Int64))
-                            fi.SetValue(obj, Convert.ToInt64(parameter));
-                        else if (fi.FieldType == typeof(Int32))
-                            fi.SetValue(obj, Convert.ToInt32(parameter));
-                        else if (fi.FieldType == typeof(Int16))
-                            fi.SetValue(obj, Convert.ToInt16(parameter));
-                        else if (fi.FieldType == typeof(SByte))
-                            fi.SetValue(obj, Convert.ToSByte(parameter));
-                        //Unsigned ints
-                        else if (fi.FieldType == typeof(UInt64))
-                            fi.SetValue(obj, Convert.ToUInt64(parameter));
-                        else if (fi.FieldType == typeof(UInt32))
-                            fi.SetValue(obj, Convert.ToUInt32(parameter));
-                        else if (fi.FieldType == typeof(UInt16))
-                            fi.SetValue(obj, Convert.ToUInt16(parameter));
-                        else if (fi.FieldType == typeof(Byte))
-                            fi.SetValue(obj, Convert.ToByte(parameter));
-                        //Float values
-                        else if (fi.FieldType == typeof(Decimal))
-                            fi.SetValue(obj, Convert.ToDecimal(parameter));
-                        else if (fi.FieldType == typeof(Double))
-                            fi.SetValue(obj, Convert.ToDouble(parameter));
-                        else if (fi.FieldType == typeof(Single))
-                            fi.SetValue(obj, Convert.ToSingle(parameter));
-                        else if (fi.FieldType.IsEnum)
-                            fi.SetValue(obj, Enum.Parse(fi.FieldType, parameter.ToString()));
-                        else if (fi.FieldType == typeof(bool))
-                            fi.SetValue(obj, parameter);
-                        else if (fi.FieldType == typeof(string))
-                            fi.SetValue(obj, parameter);
-                        else if (fi.FieldType == typeof(DateTime))
-                        {
-                            DateTime dateTime;
-                            if (DateTime.TryParse(parameter.ToString(), out dateTime))
-                                fi.SetValue(obj, dateTime);
-                            else
-                                throw new Exception("DateTime value incorrect format: " + parameter.ToString());
-                        }
-                        //Other classes
-                        else if (parameter is JSONObject)
-                        {
-                            var childObj = parameter as JSONObject;
-                            DecodeCallback decoder = null;
-                            if (fi.FieldType.HasInterface(typeof(IDictionary)))
-                                decoder = GetDecoder(typeof(IDictionary));
-                            else
-                                decoder = GetDecoderOrDefault(fi.FieldType);
-
-                            var decodedObj = decoder(childObj, fi.FieldType);
-                            fi.SetValue(obj, decodedObj);
-                        }
-
+                        //TODO: An error or warning??
+                        continue;
                     }
-
+                    else
+                        fi.SetValue(obj, DecodeValue(parameter, fi.FieldType));
                 }
                 //TODO: Issue a warning?
-
-                //Deserialized Callback
-                if (callbacks != null) callbacks.OnDeserialized();
 
                 return obj;
             });
@@ -273,13 +255,82 @@ namespace Pixelbyte.JsonUnity
             }
         }
 
+        static object DecodeValue(object value, Type toType)
+        {
+            if (value == null) return null;
+
+            if (value == typeof(bool) || value == typeof(string))
+                return value;
+            //Signed ints
+            else if (toType == typeof(Int64))
+                value = Convert.ToInt64(value);
+            else if (toType == typeof(Int32))
+                value = Convert.ToInt32(value);
+            else if (toType == typeof(Int16))
+                value = Convert.ToInt16(value);
+            else if (toType == typeof(SByte))
+                value = Convert.ToSByte(value);
+            //Unsigned ints
+            else if (toType == typeof(UInt64))
+                value = Convert.ToUInt64(value);
+            else if (toType == typeof(UInt32))
+                value = Convert.ToUInt32(value);
+            else if (toType == typeof(UInt16))
+                value = Convert.ToUInt16(value);
+            else if (toType == typeof(Byte))
+                value = Convert.ToByte(value);
+            //Float values
+            else if (toType == typeof(Decimal))
+                value = Convert.ToDecimal(value);
+            else if (toType == typeof(Double))
+                value = Convert.ToDouble(value);
+            else if (toType == typeof(Single))
+                value = Convert.ToSingle(value);
+            else if (toType.IsEnum)
+                value = Enum.Parse(toType, value.ToString());
+            else if (toType == typeof(DateTime))
+            {
+                DateTime dateTime;
+                if (DateTime.TryParse(value.ToString(), out dateTime))
+                    return dateTime;
+                else
+                    throw new Exception("DateTime value incorrect format: " + value.ToString());
+            }
+            //Other classes
+            else if (value is JSONObject)
+            {
+                var childObj = value as JSONObject;
+                DecodeCallback decoder = null;
+
+                if (toType.HasInterface(typeof(IDictionary)))
+                    decoder = GetDecoder(typeof(IDictionary));
+                else
+                    decoder = GetDecoderOrDefault(toType);
+
+                return decoder(toType, childObj);
+            }
+            else if (value is List<object>)
+            {
+                var childObj = value as List<object>;
+                DecodeCallback decoder = null;
+                if (toType.IsGeneric(typeof(List<>)))
+                    decoder = GetDecoder(typeof(IList));
+                if (toType.IsArray)
+                    decoder = GetDecoder(typeof(Array));
+                else
+                    decoder = GetDecoderOrDefault(toType);
+                return decoder(toType, new JSONObject(childObj));
+            }
+            return value;
+        }
+
         static object Deserialize(JSONObject jsonObj, Type type)
         {
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
             var decoder = GetDecoderOrDefault(type);
             //See if this object implements the Deserialization callback interface
-            var decodedObject = decoder(jsonObj, type);
+            var decodedObject = decoder(type, jsonObj);
             var callbacks = decodedObject as IDeserializationCallbacks;
 
             //Deserialized Callback
