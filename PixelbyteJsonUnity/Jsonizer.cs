@@ -181,14 +181,14 @@ namespace Pixelbyte.JsonUnity
 
         #endregion
 
-        public static string Ser(object obj, bool prettyPrint = true)
+        public static string Serialize(object obj, bool prettyPrint = true)
         {
             JSONCreator creator = new JSONCreator(prettyPrint);
-            Ser(obj, creator);
+            Serialize(obj, creator);
             return creator.ToString();
         }
 
-        static string Ser(object obj, JSONCreator creator)
+        static string Serialize(object obj, JSONCreator creator)
         {
             //Object to serialize can't be null [TODO: Or can it?]
             if (obj == null)
@@ -276,7 +276,7 @@ namespace Pixelbyte.JsonUnity
                 if (encode != null)
                     encode(value, builder);
                 else
-                    Ser(value, builder);
+                    Serialize(value, builder);
             }
         }
 

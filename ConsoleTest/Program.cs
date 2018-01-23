@@ -18,7 +18,7 @@ namespace Pixelbyte.JsonUnity
             //Console.WriteLine(json);
 
             ClassWithClassReference cr = new ClassWithClassReference() { name = "Jalopnik", age = 43, isMale = false, pet = new Animal() { name = "Tortuga", ferocity = Ferocity.Docile }, temperature = 98.6f };
-            string js = Jsonizer.Ser(cr);
+            string js = Jsonizer.Serialize(cr);
             Console.WriteLine(js);
 
             var sc = Jsonizer.Deserialize<ClassWithClassReference>(js);
