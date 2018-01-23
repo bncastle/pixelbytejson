@@ -7,26 +7,30 @@ using System.Runtime.Serialization;
 namespace Pixelbyte.JsonUnity
 {
     using EncodeCallback = Action<object, JSONCreator>;
+    using DecodeCallback = Func<JSONObject, Type, object>;
 
     // Define other methods and classes here
     public static class Jsonizer
     {
         //Contains all supported JSON encoders
-        static Dictionary<Type, EncodeCallback> encoders;
-        static EncodeCallback defaultEncoder;
+        static Container<Type, EncodeCallback> encoders;
+        static Container<Type, DecodeCallback> decoders;
+        //static EncodeCallback defaultEncoder;
+        static DecodeCallback defaultDecoder;
 
         //static Dictionary<Type, SerializationProxy> proxies;
         //static SerializationProxy defaultProxy;
 
         static Jsonizer()
         {
-            encoders = new Dictionary<Type, EncodeCallback>();
-            AddDefaultEncoders();
+            encoders = new Container<Type, EncodeCallback>();
+            decoders = new Container<Type, DecodeCallback>();
+            AddDefaults();
         }
 
-        static void AddDefaultEncoders()
+        static void AddDefaults()
         {
-            defaultEncoder = ((obj, builder) =>
+            encoders.SetDefaultValue((obj, builder) =>
             {
                 Type type = obj.GetType();
                 builder.BeginObject();
@@ -49,7 +53,7 @@ namespace Pixelbyte.JsonUnity
                 builder.EndObject();
             });
 
-            AddEncoder<IEnumerable>((obj, builder) =>
+            encoders.Add(typeof(IEnumerable), (obj, builder) =>
             {
                 builder.BeginArray();
                 builder.LineBreak();
@@ -62,33 +66,116 @@ namespace Pixelbyte.JsonUnity
                 builder.EndArray();
             });
 
-            AddEncoder<IDictionary>((obj, builder) =>
+            encoders.Add(typeof(IDictionary), (obj, builder) =>
+             {
+                 builder.BeginObject();
+                 var table = obj as IDictionary;
+                 foreach (var key in table.Keys)
+                 {
+                     EncodePair(key.ToString(), table[key], builder);
+                     builder.Comma();
+                     builder.LineBreak();
+                 }
+                 builder.EndObject();
+             });
+
+            decoders.Add(typeof(IDictionary), (jsonObj, type) =>
             {
-                builder.BeginObject();
-                var table = obj as IDictionary;
-                foreach (var key in table.Keys)
+                if (jsonObj == null) throw new ArgumentNullException("jsonObj");
+
+                var obj = Activator.CreateInstance(type) as IDictionary;
+
+                foreach (var kv in jsonObj)
                 {
-                    EncodePair(key.ToString(), table[key], builder);
-                    builder.Comma();
-                    builder.LineBreak();
+                    obj.Add(kv.Key, kv.Value);
                 }
-                builder.EndObject();
+                return obj;
             });
-        }
+            decoders.SetDefaultValue((jsonObj, type) =>
+            {
+                if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
-        public static void AddEncoder<T>(Action<object, JSONCreator> encodeMethod)
-        {
-            encoders[typeof(T)] = encodeMethod;
-        }
+                var obj = Activator.CreateInstance(type);
 
-        public static void RemoveEncoder<T>() { encoders.Remove(typeof(T)); }
-        public static bool HasEncoder(object value) { return value != null && encoders.ContainsKey(value.GetType()); }
+                //See if this object implements the Deserialization callback interface
+                var callbacks = obj as IDeserializationCallbacks;
 
-        public static EncodeCallback GetEncoder(Type type)
-        {
-            EncodeCallback callback;
-            if (encoders.TryGetValue(type, out callback)) return callback;
-            else return defaultEncoder;
+                var fieldInfos = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+                //What to do here? Nothing maybe?
+                if (fieldInfos == null)
+                    throw new Exception();
+
+                foreach (var fi in fieldInfos)
+                {
+                    //Look for the field name in the json object's data
+                    var parameter = jsonObj[fi.Name];
+                    if (parameter != null)
+                    {
+                        //Signed ints
+                        if (fi.FieldType == typeof(Int64))
+                            fi.SetValue(obj, Convert.ToInt64(parameter));
+                        else if (fi.FieldType == typeof(Int32))
+                            fi.SetValue(obj, Convert.ToInt32(parameter));
+                        else if (fi.FieldType == typeof(Int16))
+                            fi.SetValue(obj, Convert.ToInt16(parameter));
+                        else if (fi.FieldType == typeof(SByte))
+                            fi.SetValue(obj, Convert.ToSByte(parameter));
+                        //Unsigned ints
+                        else if (fi.FieldType == typeof(UInt64))
+                            fi.SetValue(obj, Convert.ToUInt64(parameter));
+                        else if (fi.FieldType == typeof(UInt32))
+                            fi.SetValue(obj, Convert.ToUInt32(parameter));
+                        else if (fi.FieldType == typeof(UInt16))
+                            fi.SetValue(obj, Convert.ToUInt16(parameter));
+                        else if (fi.FieldType == typeof(Byte))
+                            fi.SetValue(obj, Convert.ToByte(parameter));
+                        //Float values
+                        else if (fi.FieldType == typeof(Decimal))
+                            fi.SetValue(obj, Convert.ToDecimal(parameter));
+                        else if (fi.FieldType == typeof(Double))
+                            fi.SetValue(obj, Convert.ToDouble(parameter));
+                        else if (fi.FieldType == typeof(Single))
+                            fi.SetValue(obj, Convert.ToSingle(parameter));
+                        else if (fi.FieldType.IsEnum)
+                            fi.SetValue(obj, Enum.Parse(fi.FieldType, parameter.ToString()));
+                        else if (fi.FieldType == typeof(bool))
+                            fi.SetValue(obj, parameter);
+                        else if (fi.FieldType == typeof(string))
+                            fi.SetValue(obj, parameter);
+                        else if (fi.FieldType == typeof(DateTime))
+                        {
+                            DateTime dateTime;
+                            if (DateTime.TryParse(parameter.ToString(), out dateTime))
+                                fi.SetValue(obj, dateTime);
+                            else
+                                throw new Exception("DateTime value incorrect format: " + parameter.ToString());
+                        }
+                        //Other classes
+                        else if (parameter is JSONObject)
+                        {
+                            var childObj = parameter as JSONObject;
+                            DecodeCallback decoder = null;
+                            if (fi.FieldType.HasInterface(typeof(IDictionary)))
+                                decoder = decoders[typeof(IDictionary)];
+                            else
+                                decoder = decoders[fi.FieldType];
+
+                            var decodedObj = decoder(childObj, fi.FieldType);
+                            fi.SetValue(obj, decodedObj);
+                        }
+
+                    }
+
+                }
+                //TODO: Issue a warning?
+
+                //Deserialized Callback
+                if (callbacks != null) callbacks.OnDeserialized();
+
+                return obj;
+            });
+
         }
 
         public static string Ser(object obj, bool prettyPrint = true)
@@ -111,7 +198,7 @@ namespace Pixelbyte.JsonUnity
 
             if (callbacks != null) callbacks.PreSerialization();
 
-            var encodeMethod = GetEncoder(type);
+            var encodeMethod = encoders[type];
             encodeMethod(obj, creator);
 
             if (callbacks != null) callbacks.PostSerialization();
@@ -160,11 +247,11 @@ namespace Pixelbyte.JsonUnity
                 EncodeCallback encode = null;
                 //Try a dictionary first
                 if (type.HasInterface(typeof(IDictionary)))
-                    encode = GetEncoder(typeof(IDictionary));
+                    encode = encoders[typeof(IDictionary)];
                 else if (type.HasInterface(typeof(IEnumerable)))
-                    encode = GetEncoder(typeof(IEnumerable));
+                    encode = encoders[typeof(IEnumerable)];
                 else
-                    encode = GetEncoder(value.GetType());
+                    encode = encoders[value.GetType()];
                 if (encode != null)
                     encode(value, builder);
                 else
@@ -176,74 +263,15 @@ namespace Pixelbyte.JsonUnity
         {
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
-            var obj = Activator.CreateInstance(type);
-
+            var decoder = decoders[type];
             //See if this object implements the Deserialization callback interface
-            var callbacks = obj as IDeserializationCallbacks;
-
-            var fieldInfos = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-            //What to do here? Nothing maybe?
-            if (fieldInfos == null)
-                throw new Exception();
-
-            foreach (var fi in fieldInfos)
-            {
-                //Look for the field name in the json object's data
-                var parameter = jsonObj[fi.Name];
-                if (parameter != null)
-                {
-                    //Signed ints
-                    if (fi.FieldType == typeof(Int64))
-                        fi.SetValue(obj, Convert.ToInt64(parameter));
-                    else if (fi.FieldType == typeof(Int32))
-                        fi.SetValue(obj, Convert.ToInt32(parameter));
-                    else if (fi.FieldType == typeof(Int16))
-                        fi.SetValue(obj, Convert.ToInt16(parameter));
-                    else if (fi.FieldType == typeof(SByte))
-                        fi.SetValue(obj, Convert.ToSByte(parameter));
-                    //Unsigned ints
-                    else if (fi.FieldType == typeof(UInt64))
-                        fi.SetValue(obj, Convert.ToUInt64(parameter));
-                    else if (fi.FieldType == typeof(UInt32))
-                        fi.SetValue(obj, Convert.ToUInt32(parameter));
-                    else if (fi.FieldType == typeof(UInt16))
-                        fi.SetValue(obj, Convert.ToUInt16(parameter));
-                    else if (fi.FieldType == typeof(Byte))
-                        fi.SetValue(obj, Convert.ToByte(parameter));
-                    //Float values
-                    else if (fi.FieldType == typeof(Decimal))
-                        fi.SetValue(obj, Convert.ToDecimal(parameter));
-                    else if (fi.FieldType == typeof(Double))
-                        fi.SetValue(obj, Convert.ToDouble(parameter));
-                    else if (fi.FieldType == typeof(Single))
-                        fi.SetValue(obj, Convert.ToSingle(parameter));
-                    else if (fi.FieldType.IsEnum)
-                        fi.SetValue(obj, Enum.Parse(fi.FieldType, parameter.ToString()));
-                    else if (fi.FieldType == typeof(DateTime))
-                    {
-                        DateTime dateTime;
-                        if (DateTime.TryParse(parameter.ToString(), out dateTime))
-                            fi.SetValue(obj, dateTime);
-                        else
-                            throw new Exception("DateTime value incorrect format: " + parameter.ToString());
-                    }
-                    //Other classes
-                    else if (parameter is JSONObject)
-                        fi.SetValue(obj, Deserialize(parameter as JSONObject, fi.FieldType));
-
-                    //TOOD: Enable decoding arrays, lists, dictionaries
-                    //strings, booleans
-                    else
-                        fi.SetValue(obj, parameter);
-                }
-                //TODO: Issue a warning?
-            }
+            var decodedObject = decoder(jsonObj, type);
+            var callbacks = decodedObject as IDeserializationCallbacks;
 
             //Deserialized Callback
             if (callbacks != null) callbacks.OnDeserialized();
 
-            return obj;
+            return decodedObject;
         }
 
         static T Deserialize<T>(JSONObject jsonObj)
