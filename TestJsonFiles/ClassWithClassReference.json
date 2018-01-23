@@ -1,0 +1,33 @@
+{
+        "name" : "Jalopnik",
+        "age" : 43,
+        "birthday" : "9/9/1990 12:00:00 AM",
+        "temperature" : 98.6,
+        "isMale" : false,
+        "pet" : {
+                "name" : "Tortuga",
+                "percentExtinct" : 0.0,
+                "ferocity" : "Docile",
+                "speed" : {
+                        "x" : 34.4,
+                        "y" : 98.6,
+                        "z" : -0.978
+                }
+        },
+        "numbers" : {
+                "fiver" : 5,
+                "sixer" : 6,
+                "severner" : 7
+        },
+        "aList" : [
+                "fredro",
+                "norbo",
+                "rendro"
+        ],
+        "anArray" : [
+                "fredro",
+                "norbo",
+                "rendro"
+        ],
+        "doThisOne" : "It is done!"
+}

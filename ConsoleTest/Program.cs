@@ -25,9 +25,10 @@ namespace Pixelbyte.JsonUnity
             if (sc != null)
                 Console.WriteLine(sc.ToString());
 
-            //TestJsonParser(@"..\..\..\TestClass.json");
-            //TestJsonParser(@"..\..\..\random.json");
-            //TestJsonParser(@"..\..\..\largeArray.json");
+            //TestJsonParser(@"..\..\..\TestJsonFiles\TestClass.json");
+            //TestJsonParser(@"..\..\..\TestJsonFiles\ClassWithClassReference.json");
+            //TestJsonParser(@"..\..\..\TestJsonFiles\random.json");
+            //TestJsonParser(@"..\..\..\TestJsonFiles\largeArray.json");
 
             //var parser = JSONParser.Parse("{\"Fred\" : \"Ted}");
             //Console.WriteLine(parser.Tokenizer.AllErrors);
@@ -56,6 +57,8 @@ namespace Pixelbyte.JsonUnity
 
         private static void TestJsonParser(string filename)
         {
+            Console.WriteLine("Parsing {0}", filename);
+
             var jparser = JSONParser.ParseFile(filename);
 
             //Show any Tokenizer errors
@@ -67,7 +70,7 @@ namespace Pixelbyte.JsonUnity
                     Console.WriteLine(err);
                 }
             }
-            else if (jparser.Successful)
+            else if (!jparser.Successful)
             {
                 Console.WriteLine("====Parser Errors====");
                 foreach (var err in jparser.Errors)

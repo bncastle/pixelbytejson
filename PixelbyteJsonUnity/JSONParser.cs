@@ -113,7 +113,7 @@ namespace Pixelbyte.JsonUnity
                 LogError("Expected a ':'", PreviousToken(), false);
                 return null;
             }
-            else if(PeekToken.Kind != TokenType.Colon)
+            else if (PeekToken.Kind != TokenType.Colon)
             {
                 LogError("Expected a ':'", PeekToken, false);
                 return null;
@@ -172,16 +172,14 @@ namespace Pixelbyte.JsonUnity
                 if (pair == null) break;
                 else
                 {
-                    if(!obj.Add(pair.name, pair.value))
+                    if (!obj.Add(pair.name, pair.value))
                         throw new JSONParserException(string.Format("[{0}:{1}] Duplicate key found: {2}", PreviousToken().Line, PreviousToken().Column, pair.name));
                 }
 
                 if (PeekToken == null || PeekToken.Kind == TokenType.CloseCurly) break;
 
-                if (PeekToken.Kind != TokenType.Comma)
-                {
+                else if (PeekToken.Kind != TokenType.Comma)
                     LogError("Expected a ,", PeekToken, false);
-                }
 
                 NextToken();
             }
@@ -207,7 +205,7 @@ namespace Pixelbyte.JsonUnity
             {
                 if (PeekToken.Kind.Contains(TokenType.Value))
                 {
-                    array.Add(PeekToken.Lexeme);
+                    array.Add(NextToken().Lexeme);
                 }
                 else if (PeekToken.Kind == TokenType.OpenBracket)
                 {
@@ -222,15 +220,11 @@ namespace Pixelbyte.JsonUnity
                     LogError("Unexpected ':'", PeekToken, false);
                 }
 
-                NextToken();
-
                 if (PeekToken == null || PeekToken.Kind == TokenType.CloseBracket) break;
 
                 //No closing bracket? then expect a comma
-                if (PeekToken.Kind != TokenType.Comma)
-                {
+                else if (PeekToken.Kind != TokenType.Comma)
                     LogError("Expected a ,", PeekToken, false);
-                }
 
                 NextToken();
             }
@@ -269,7 +263,7 @@ namespace Pixelbyte.JsonUnity
                     errors.Add(string.Format("Parser [{0}:{1}]: {2}", tok.Line, tok.Column, text));
             }
             else
-                errors.Add("Parser: " +  text);
+                errors.Add("Parser: " + text);
             Successful = false;
         }
     }
