@@ -13,8 +13,7 @@ namespace Pixelbyte.JsonUnity
         JSONTokenizer tokenizer;
         List<string> errors;
 
-        //This Parsed result, if no errors, will either be
-        //a JsonObject, or an array
+        //This Parsed result, if no errors, will be a JsonObject
         public JSONObject rootObject;
 
         public JSONTokenizer Tokenizer { get { return tokenizer; } }
@@ -171,7 +170,11 @@ namespace Pixelbyte.JsonUnity
 
                 var pair = ParsePair();
                 if (pair == null) break;
-                else obj.Add(pair.name, pair.value);
+                else
+                {
+                    if(!obj.Add(pair.name, pair.value))
+                        throw new JSONParserException(string.Format("[{0}:{1}] Duplicate key found: {2}", PreviousToken().Line, PreviousToken().Column, pair.name));
+                }
 
                 if (PeekToken == null || PeekToken.Kind == TokenType.CloseCurly) break;
 

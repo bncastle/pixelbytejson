@@ -31,7 +31,7 @@ namespace Pixelbyte.JsonUnity
             pairs = new Dictionary<string, object>();
         }
 
-        public JSONObject(List<object> objectArray):this()
+        public JSONObject(List<object> objectArray) : this()
         {
             rootArray = objectArray;
             IsArray = true;
@@ -41,9 +41,13 @@ namespace Pixelbyte.JsonUnity
 
         public bool Add(string key, object value)
         {
-            //TODO: Check for duplicates?
-            pairs.Add(key, value);
-            return true;
+            if (pairs.ContainsKey(key))
+                return false;
+            else
+            {
+                pairs.Add(key, value);
+                return true;
+            }
         }
 
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator() { return pairs.GetEnumerator(); }

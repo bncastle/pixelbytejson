@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace Pixelbyte.JsonUnity
 {
@@ -15,7 +12,7 @@ namespace Pixelbyte.JsonUnity
             return false;
         }
 
-        internal static bool Contains(this char[] array, int c) { if (c < 0) return false; return Contains(array, (char)c); }
+        //internal static bool Contains(this char[] array, int c) { if (c < 0) return false; return Contains(array, (char)c); }
 
         internal static int CountChar(this string text, char c)
         {
@@ -89,11 +86,11 @@ namespace Pixelbyte.JsonUnity
             return fi.GetCustomAttributes(typeof(T), false).Length > 0;
         }
 
-        internal static T GetFirstAttribute<T>(this FieldInfo fi) where T : class
-        {
-            var attrs = fi.GetCustomAttributes(typeof(T), false);
-            if (attrs.Length == 0) return null;
-            else return attrs[0] as T;
-        }
+        //internal static T GetFirstAttribute<T>(this FieldInfo fi) where T : class
+        //{
+        //    var attrs = fi.GetCustomAttributes(typeof(T), false);
+        //    if (attrs.Length == 0) return null;
+        //    else return attrs[0] as T;
+        //}
     }
 }

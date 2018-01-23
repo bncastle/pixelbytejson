@@ -155,12 +155,13 @@ namespace Pixelbyte.JsonUnity
                     else
                         fi.SetValue(obj, DecodeValue(parameter, fi.FieldType));
                 }
-                //TODO: Issue a warning?
 
                 return obj;
             });
 
         }
+
+        #region Decoder Methods
 
         public static void AddDecoder(Type type, DecodeCallback decodeFunc) { decoders.Add(type, decodeFunc); }
         public static void RemoveDecoder(Type type) { decoders.Remove(type); }
@@ -168,11 +169,17 @@ namespace Pixelbyte.JsonUnity
         static DecodeCallback GetDecoderOrDefault(Type type) { DecodeCallback callback = GetDecoder(type); if (callback == null) callback = defaultDecoder; return callback; }
         public static void ClearDecoders() { decoders.Clear(); }
 
+        #endregion
+
+        #region Encoder Methods
+
         public static void AddEncoder(Type type, EncodeCallback encodeFunc) { encoders.Add(type, encodeFunc); }
         public static void RemoveEncoder(Type type) { encoders.Remove(type); }
         static EncodeCallback GetEncoder(Type type) { EncodeCallback callback = null; encoders.TryGetValue(type, out callback); return callback; }
         static EncodeCallback GetEncoderOrDefault(Type type) { EncodeCallback callback = GetEncoder(type); if (callback == null) callback = defaultEncoder; return callback; }
         public static void ClearEncoders() { encoders.Clear(); }
+
+        #endregion
 
         public static string Ser(object obj, bool prettyPrint = true)
         {
@@ -207,23 +214,41 @@ namespace Pixelbyte.JsonUnity
             if (!parser.Tokenizer.Successful)
             {
                 //TODO: Make custom exception to show all tokenizer errors
-                throw new Exception(parser.Tokenizer.AllErrors);
+                throw new JSONTokenizerException(parser.Tokenizer.AllErrors);
             }
             else if (!parser.Successful)
             {
                 //TODO: Make custom exception to show all parser errors
-                throw new Exception(parser.AllErrors);
+                throw new JSONParserException(parser.AllErrors);
             }
             else if (parser.rootObject == null)
             {
                 //TODO: Make custom exception
-                throw new Exception("JSON root was not an object!");
+                throw new JSONParserException("JSON ionput did not contain an object!");
             }
             else
             {
-                return Deserialize<T>(parser.rootObject);
+                //Ok then, try to Deserialize
+                return (T)Deserialize(parser.rootObject, typeof(T));
             }
         }
+
+        static object Deserialize(JSONObject jsonObj, Type type)
+        {
+            if (jsonObj == null) throw new ArgumentNullException("jsonObj");
+
+            var decoder = GetDecoderOrDefault(type);
+            //See if this object implements the Deserialization callback interface
+            var decodedObject = decoder(type, jsonObj);
+            var callbacks = decodedObject as IDeserializationCallbacks;
+
+            //Deserialized Callback
+            if (callbacks != null) callbacks.OnDeserialized();
+
+            return decodedObject;
+        }
+
+        #region Value Encode/Decode Methods
 
         static void EncodePair(string name, object value, JSONCreator builder)
         {
@@ -309,6 +334,7 @@ namespace Pixelbyte.JsonUnity
 
                 return decoder(toType, childObj);
             }
+            //Lists, Dictionaries, Arrays...
             else if (value is List<object>)
             {
                 var childObj = value as List<object>;
@@ -322,29 +348,7 @@ namespace Pixelbyte.JsonUnity
                 return decoder(toType, new JSONObject(childObj));
             }
             return value;
-        }
-
-        static object Deserialize(JSONObject jsonObj, Type type)
-        {
-            if (jsonObj == null) throw new ArgumentNullException("jsonObj");
-
-            var decoder = GetDecoderOrDefault(type);
-            //See if this object implements the Deserialization callback interface
-            var decodedObject = decoder(type, jsonObj);
-            var callbacks = decodedObject as IDeserializationCallbacks;
-
-            //Deserialized Callback
-            if (callbacks != null) callbacks.OnDeserialized();
-
-            return decodedObject;
-        }
-
-        static T Deserialize<T>(JSONObject jsonObj)
-        {
-            if (jsonObj == null) throw new ArgumentNullException("jsonObj");
-
-            var obj = Deserialize(jsonObj, typeof(T));
-            return (T)obj;
-        }
+        } 
+        #endregion
     }
 }

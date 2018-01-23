@@ -5,4 +5,13 @@ using System.Text;
 
 namespace Pixelbyte.JsonUnity
 {
+    public class JSONTokenizerException : Exception
+    {
+        public JSONTokenizerException(string message) : base(message) { }
+    }
+
+    public class JSONParserException : Exception
+    {
+        public JSONParserException(string message) : base(message) { }
+    }
 }

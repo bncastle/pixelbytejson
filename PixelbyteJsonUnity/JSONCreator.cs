@@ -6,6 +6,9 @@ using System.Text;
 
 namespace Pixelbyte.JsonUnity
 {
+    /// <summary>
+    /// Helps with building the JSON string when we serialize a class
+    /// </summary>
     public class JSONCreator
     {
         StringBuilder builder;
