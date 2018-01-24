@@ -12,6 +12,24 @@ namespace Pixelbyte.Json
         static Dictionary<Type, DecodeCallback> decoders;
         static DecodeCallback defaultDecoder;
 
+        static Func<Type, object> CreateObjectInstance;
+
+        /// <summary>
+        /// Set this to override how the Default Decoder creates the objects
+        /// Note: I'm using this so I can call ScriptableObject.CreateInstance in Unity3D
+        /// </summary>
+        public static Func<Type, object> CreatInstanceMethod
+        {
+            get { return CreateObjectInstance; }
+            set
+            {
+                if (value == null)
+                    CreateObjectInstance = (type) => Activator.CreateInstance(type);
+                else
+                    CreateObjectInstance = value;
+            }
+        }
+
         static JSONDecoder()
         {
             decoders = new Dictionary<Type, DecodeCallback>();
@@ -75,7 +93,7 @@ namespace Pixelbyte.Json
             {
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
-                var obj = Activator.CreateInstance(type, true);
+                object obj = CreateObjectInstance(type);
 
                 var fieldInfos = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
@@ -95,10 +113,8 @@ namespace Pixelbyte.Json
                     else
                         fi.SetValue(obj, DecodeValue(parameter, fi.FieldType));
                 }
-
                 return obj;
             });
-
         }
 
         #region Decoder Methods
