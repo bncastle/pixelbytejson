@@ -230,7 +230,7 @@ namespace Pixelbyte.Json
                 DecodeCallback decoder = null;
                 if (toType.IsGeneric(typeof(List<>)))
                     decoder = GetDecoder(typeof(IList));
-                if (toType.IsArray)
+                else if (toType.IsArray)
                     decoder = GetDecoder(typeof(Array));
                 else
                     decoder = GetDecoderOrDefault(toType);
