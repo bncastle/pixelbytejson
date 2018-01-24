@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace Pixelbyte.JsonUnity
+namespace Pixelbyte.Json
 {
     internal static class InternalExtensionMethods
     {

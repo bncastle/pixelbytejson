@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace Pixelbyte.JsonUnity
+namespace Pixelbyte.Json
 {
     /// <summary>
     /// Helps with building the JSON string when we serialize a class

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Pixelbyte.JsonUnity
+namespace Pixelbyte.Json
 {
     ///If present on a float, double, or decimal field then it restricts the max decimal places to the number given
     public class JsonMaxDecimalPlacesAttribute : Attribute

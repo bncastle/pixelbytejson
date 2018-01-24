@@ -1,4 +1,4 @@
-﻿namespace Pixelbyte.JsonUnity
+﻿namespace Pixelbyte.Json
 {
     /// <summary>
     /// Implementation of the JSON 

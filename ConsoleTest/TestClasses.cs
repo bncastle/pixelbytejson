@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Pixelbyte.JsonUnity
+namespace Pixelbyte.Json
 {
     internal struct Bounds
     {

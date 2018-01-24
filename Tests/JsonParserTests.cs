@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-using Pixelbyte.JsonUnity;
+using Pixelbyte.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;

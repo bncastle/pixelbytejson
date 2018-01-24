@@ -44,9 +44,9 @@
     <Compile Include="TestClasses.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PixelbyteJsonUnity\PixelbyteJsonUnity.csproj">
+    <ProjectReference Include="..\PixelbyteJson\PixelbyteJson.csproj">
       <Project>{b433f4d1-5c0c-4b0d-b044-9a016e255d72}</Project>
-      <Name>PixelbyteJsonUnity</Name>
+      <Name>PixelbyteJson</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

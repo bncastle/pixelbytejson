@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Pixelbyte.JsonUnity
+namespace Pixelbyte.Json
 {
     /// <summary>
     /// Parses the given JSON string
+    /// Note: When compiling for a .NET 3.5 Target, this is meant 
+    /// to be compatible with Unity3D
     /// reference: https://www.json.org/
     /// </summary>
     public class JSONParser

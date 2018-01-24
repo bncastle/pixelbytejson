@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Pixelbyte.JsonUnity
+namespace Pixelbyte.Json
 {
     public enum TokenType : UInt16
     {

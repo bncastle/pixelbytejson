@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Pixelbyte.JsonUnity
+namespace Pixelbyte.Json
 {
     public class JSONTokenizer
     {

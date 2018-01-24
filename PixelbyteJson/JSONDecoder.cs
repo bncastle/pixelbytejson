@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Pixelbyte.JsonUnity
+namespace Pixelbyte.Json
 {
     // Define other methods and classes here
     public static class JSONDecoder

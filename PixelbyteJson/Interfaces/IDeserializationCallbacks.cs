@@ -1,4 +1,4 @@
-﻿namespace Pixelbyte.JsonUnity
+﻿namespace Pixelbyte.Json
 {
     public interface IDeserializationCallbacks
     {
