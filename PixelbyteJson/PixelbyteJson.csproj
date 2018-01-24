@@ -43,8 +43,8 @@
   <ItemGroup>
     <Compile Include="Exceptions.cs" />
     <Compile Include="Interfaces\IJsonDecodeCallbacks.cs" />
+    <Compile Include="Interfaces\IJsonEncodeCallbacks.cs" />
     <Compile Include="Interfaces\IJsonEncodingControl.cs" />
-    <Compile Include="Interfaces\IJsonSerializeCallbacks.cs" />
     <Compile Include="InternalExtensionMethods.cs" />
     <Compile Include="JsonAttributes.cs" />
     <Compile Include="Json\JSONDecoder.cs" />
