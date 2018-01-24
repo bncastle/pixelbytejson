@@ -81,9 +81,14 @@ namespace Pixelbyte.Json
             }
         }
 
-        internal static bool HasAttribute<T>(this FieldInfo fi) where T : class
+        internal static bool HasAttribute<T>(this FieldInfo fi) where T : Attribute
         {
             return fi.GetCustomAttributes(typeof(T), false).Length > 0;
+        }
+
+        internal static bool HasAttribute<T>(this Type type, bool inherit) where T : Attribute
+        {
+            return type.GetCustomAttributes(typeof(T), inherit).Length > 0;
         }
 
         //internal static T GetFirstAttribute<T>(this FieldInfo fi) where T : class

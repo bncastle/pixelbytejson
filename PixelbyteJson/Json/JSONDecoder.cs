@@ -8,6 +8,12 @@ namespace Pixelbyte.Json
     // Define other methods and classes here
     public static class JSONDecoder
     {
+        //The presence of this string as a key in a Json object indicates the 
+        //type of object that it represents if it is present. Otherwise, we just fit
+        //the object to the type of the field. This field is necessary when the field is some 
+        //abstract class but the actual value is a subclass of it.
+        const string TypeNameString = "@type";
+
         public delegate object DecodeCallback(Type targetType, JSONObject jsonObj);
         static Dictionary<Type, DecodeCallback> decoders;
         static DecodeCallback defaultDecoder;
@@ -24,7 +30,7 @@ namespace Pixelbyte.Json
             set
             {
                 if (value == null)
-                    CreateObjectInstance = (type) => Activator.CreateInstance(type);
+                    CreateObjectInstance = (type) => Activator.CreateInstance(type, true);
                 else
                     CreateObjectInstance = value;
             }
@@ -93,7 +99,11 @@ namespace Pixelbyte.Json
             {
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
-                object obj = CreateObjectInstance(type);
+                object obj = null;
+                if (jsonObj[TypeNameString] != null)
+                    obj = CreateObjectInstance(Type.GetType(jsonObj[TypeNameString].ToString()));
+                else
+                    obj = CreateObjectInstance(type);
 
                 var fieldInfos = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
@@ -157,12 +167,13 @@ namespace Pixelbyte.Json
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
             var decoder = GetDecoderOrDefault(type);
+
             //See if this object implements the Deserialization callback interface
             var decodedObject = decoder(type, jsonObj);
-            var callbacks = decodedObject as IDeserializationCallbacks;
+            var callbacks = decodedObject as IJsonDecodeCallbacks;
 
             //Deserialized Callback
-            if (callbacks != null) callbacks.OnDeserialized();
+            if (callbacks != null) callbacks.OnJsonDecoded();
 
             return decodedObject;
         }
@@ -214,14 +225,14 @@ namespace Pixelbyte.Json
             else if (value is JSONObject)
             {
                 var childObj = value as JSONObject;
-                DecodeCallback decoder = null;
 
                 if (toType.HasInterface(typeof(IDictionary)))
-                    decoder = GetDecoder(typeof(IDictionary));
+                {
+                    var decoder = GetDecoder(typeof(IDictionary));
+                    return decoder(toType, childObj);
+                }
                 else
-                    decoder = GetDecoderOrDefault(toType);
-
-                return decoder(toType, childObj);
+                    return Decode(childObj, toType);
             }
             //Lists, Dictionaries, Arrays...
             else if (value is List<object>)

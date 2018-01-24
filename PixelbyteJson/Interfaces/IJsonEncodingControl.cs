@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Pixelbyte.Json
 {
-    public class SerializationData : IEnumerable
+    public class EncodeData : IEnumerable
     {
         Dictionary<string, string> table;
 
@@ -21,7 +18,7 @@ namespace Pixelbyte.Json
             set { table[key] = value; }
         }
 
-        public SerializationData() { table = new Dictionary<string, string>(); }
+        public EncodeData() { table = new Dictionary<string, string>(); }
 
         public bool HasKey(string key) { return table.ContainsKey(key); }
 
@@ -31,8 +28,8 @@ namespace Pixelbyte.Json
         }
     }
 
-    public interface ISerializationControl
+    public interface IJsonEncodingControl
     {
-        void GetSerializedData(object obj, SerializationData info);
+        void GetSerializedData(object obj, EncodeData info);
     }
 }

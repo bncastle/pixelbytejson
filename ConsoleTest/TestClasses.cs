@@ -27,7 +27,7 @@ namespace Pixelbyte.Json
     {
         public string name = string.Empty;
         public int age = 0;
-        [JsonMaxDecimalPlaces(2)]
+        //[JsonMaxDecimalPlaces(2)]
         public float temperature = 0;
         public bool isMale = false;
 
@@ -53,7 +53,7 @@ namespace Pixelbyte.Json
     public enum Ferocity { Docile, Fierce, Afraid}
     public struct V3 { public float x, y, z; }
 
-    internal class ClassWithClassReference : IDeserializationCallbacks
+    internal class ClassWithClassReference : IJsonDecodeCallbacks
     {
         public string name = string.Empty;
         public int age = 0;
@@ -69,9 +69,9 @@ namespace Pixelbyte.Json
         [JsonInclude]
         private string doThisOne = "It is done!";
 
-        public void OnDeserialized()
+        public void OnJsonDecoded()
         {
-            System.Console.WriteLine("Deserialized a ClassWithClassReference");
+            System.Console.WriteLine("Decoded a ClassWithClassReference");
         }
 
         public override string ToString()

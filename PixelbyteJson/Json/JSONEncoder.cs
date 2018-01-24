@@ -21,6 +21,7 @@ namespace Pixelbyte.Json
         StringBuilder builder;
         bool prettyPrint;
         bool startOfLine = true;
+
         int indentLevel;
 
         static JSONEncoder() { typeEncoders = new Dictionary<Type, EncodeCallback>(); AddDefaults(); }
@@ -35,18 +36,17 @@ namespace Pixelbyte.Json
 
         #endregion
 
-        public JSONEncoder(bool prettyPrint)
+        public JSONEncoder(bool prettyPrint, bool storeTypeInformation)
         {
             builder = new StringBuilder();
             this.prettyPrint = prettyPrint;
-
         }
 
         #region Encode methods
 
-        public static string Encode(object obj, bool prettyPrint = true)
+        public static string Encode(object obj, bool storeTypeInfo = false, bool prettyPrint = true)
         {
-            JSONEncoder creator = new JSONEncoder(prettyPrint);
+            JSONEncoder creator = new JSONEncoder(prettyPrint, storeTypeInfo);
             Encode(obj, creator);
             return creator.ToString();
         }
@@ -59,15 +59,15 @@ namespace Pixelbyte.Json
 
             Type type = obj.GetType();
             //See if the object implements the Serialization callbacks interface
-            var callbacks = obj as ISerializeCallbacks;
-            var serializationControl = obj as ISerializationControl;
+            var callbacks = obj as IJsonEncodeCallbacks;
+            var serializationControl = obj as IJsonEncodingControl;
 
-            if (callbacks != null) callbacks.PreSerialization();
+            if (callbacks != null) callbacks.OnPreJsonEncode();
 
             var encodeMethod = creator.GetTypeEncoderOrDefault(type);
             encodeMethod(obj, creator);
 
-            if (callbacks != null) callbacks.PostSerialization();
+            if (callbacks != null) callbacks.OnPostJsonEncode();
             return creator.ToString();
         }
         #endregion
@@ -236,6 +236,18 @@ namespace Pixelbyte.Json
                     Encode(value, this);
             }
         }
+
+        public void WriteTypeInfoIfAttributePresent(Type type)
+        {
+            //If this type is a class and any of its baseClasses have
+            //a JsonTypeHint attribute, then write the type out
+            if (!type.IsClass || !type.HasAttribute<JsonTypeHint>(true)) return;
+
+            EncodePair("@type", type.FullName);
+            Comma();
+            LineBreak();
+        }
+
         #endregion
 
         static void AddDefaults()
@@ -244,6 +256,8 @@ namespace Pixelbyte.Json
             {
                 Type type = obj.GetType();
                 builder.BeginObject();
+
+                builder.WriteTypeInfoIfAttributePresent(type);
 
                 foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                 {
