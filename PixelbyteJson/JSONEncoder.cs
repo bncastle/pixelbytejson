@@ -127,7 +127,7 @@ namespace Pixelbyte.Json
             builder.Append("]");
         }
 
-        public void Colon() { builder.Append(" : "); }
+        public void Colon() { builder.Append(": "); }
         public void Comma() { builder.Append(", "); }
         public void Null() { builder.Append("null"); }
         public void Bool(bool flag) { builder.Append(flag ? "true" : "false"); }
@@ -238,8 +238,6 @@ namespace Pixelbyte.Json
         }
         #endregion
 
-        public override string ToString() { return builder.ToString(); }
-
         static void AddDefaults()
         {
             defaultTypeEncoder = ((obj, builder) =>
@@ -291,5 +289,7 @@ namespace Pixelbyte.Json
                 builder.EndObject();
             });
         }
+
+        public override string ToString() { return builder.ToString(); }
     }
 }
