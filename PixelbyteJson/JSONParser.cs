@@ -163,13 +163,6 @@ namespace Pixelbyte.Json
                 //It could be an empty object
                 if (PeekToken.Kind == TokenType.CloseCurly) break;
 
-                //Otherwise, we must have a string to indicate a value of some sort
-                if (PeekToken.Kind != TokenType.String)
-                {
-                    LogError("Expected a string!", PeekToken, false);
-                    return null;
-                }
-
                 var pair = ParsePair();
                 if (pair == null) break;
                 else

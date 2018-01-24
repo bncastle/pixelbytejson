@@ -109,7 +109,7 @@ namespace Pixelbyte.Json
                         break;
                     case '"':
                         var str = ReadString();
-                        if (!string.IsNullOrEmpty(str))
+                        if (str != null)  //String can be empty but not null
                             tokens.Add(new Token(TokenType.String, currentLine, currentColumn, str, str));
                         //LogError("Illegal null or empty string", currentLine, currentColumn);
                         break;
