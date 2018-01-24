@@ -75,11 +75,14 @@ namespace Pixelbyte.Json
         #region JSON text output methods
 
         public void LineBreak()
-        {
+        {      
             if (!prettyPrint) return;
+
+            //Remove any whitespace from the end of this line
+            //EatEndingWhitespace();
+
             builder.Append('\n');
             startOfLine = true;
-
         }
 
         void Indent()
@@ -93,7 +96,8 @@ namespace Pixelbyte.Json
         void DeIndent()
         {
             if (!startOfLine) return;
-            builder.Length = builder.Length - indentLevel;
+            if (builder.Length - indentLevel > 0)
+                builder.Length = builder.Length - indentLevel;
             indentLevel--;
         }
 
@@ -101,15 +105,36 @@ namespace Pixelbyte.Json
         public void EndObject()
         {
             indentLevel--;
-            ////There will also be a space after the comma so we include that too
-            if (builder.Length > 3 && builder[builder.Length - 3] == ',')
+            //Get rid of any commas or spaces at the end here
+            if (EatFromEnd(','))
             {
-                builder.Length = builder.Length - 3;
                 LineBreak();
             }
             Indent();
 
             builder.Append("}");
+        }
+
+       void EatEndingWhitespace()
+        {
+            while (builder.Length > 0 && char.IsWhiteSpace(builder[builder.Length - 1])) builder.Length--;
+        }
+
+        bool EatFromEnd(char c)
+        {
+            int index = builder.Length - 1;
+
+            while (index > 0 && char.IsWhiteSpace(builder[index]) && builder[index] != c)
+                index--;
+
+            //Be sure to remove the character stored in c also
+            if (index < builder.Length - 1)
+            {
+                builder.Length = index;
+                return true;
+            }
+            else
+                return false;
         }
 
         public void BeginArray() { builder.Append('['); indentLevel++; }
