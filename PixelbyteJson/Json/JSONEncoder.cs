@@ -79,7 +79,7 @@ namespace Pixelbyte.Json
             if (!prettyPrint) return;
 
             //Remove any whitespace from the end of this line
-            //EatEndingWhitespace();
+            EatEndingWhitespace();
 
             builder.Append('\n');
             startOfLine = true;
