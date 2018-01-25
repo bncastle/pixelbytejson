@@ -12,6 +12,12 @@ namespace Pixelbyte.Json
     /// </summary>
     public class JSONEncoder
     {
+        //The presence of this string as a key in a Json object indicates the 
+        //type of object that it represents if it is present. Otherwise, we just fit
+        //the object to the type of the field. This field is necessary when the field is some 
+        //abstract class but the actual value is a subclass of it.
+        public const string TypeNameString = "@type";
+
         public delegate void EncodeCallback(object obj, JSONEncoder encoder);
 
         //Contains all supported JSON encoders
@@ -47,35 +53,61 @@ namespace Pixelbyte.Json
         public static string Encode(object obj, bool storeTypeInfo = false, bool prettyPrint = true)
         {
             JSONEncoder creator = new JSONEncoder(prettyPrint, storeTypeInfo);
-            Encode(obj, creator);
+            creator.Encode(obj);
             return creator.ToString();
         }
 
-        static string Encode(object obj, JSONEncoder creator)
+        void EncodeViaJsonEncodingControl(IJsonEncodeControl control)
+        {
+            EncodeInfo encodeData = new EncodeInfo();
+            control.GetSerializedData(encodeData);
+            if (encodeData.Count == 0)
+                throw new Exception(string.Format("Object of Type {0} implements IJsonEncodingControl but returned no Encoding Data!", control.GetType().Name));
+
+            BeginObject();
+            foreach (KeyValuePair<string, object> item in encodeData)
+            {
+                EncodePair(item.Key, item.Value);
+                Comma();
+                LineBreak();
+            }
+            EndObject();
+        }
+
+        string Encode(object obj)
         {
             //Object to serialize can't be null [TODO: Or can it?]
             if (obj == null)
                 throw new ArgumentNullException("obj");
 
             Type type = obj.GetType();
+
             //See if the object implements the Serialization callbacks interface
             var callbacks = obj as IJsonEncodeCallbacks;
-            var serializationControl = obj as IJsonEncodingControl;
+            var serializationControl = obj as IJsonEncodeControl;
 
             if (callbacks != null) callbacks.OnPreJsonEncode();
 
-            var encodeMethod = creator.GetTypeEncoderOrDefault(type);
-            encodeMethod(obj, creator);
+            //If the object implements serialization control, then use it instead
+            if (serializationControl != null)
+            {
+                EncodeViaJsonEncodingControl(serializationControl);
+            }
+            else
+            {
+                var encodeMethod = GetTypeEncoderOrDefault(type);
+                encodeMethod(obj, this);
+            }
 
             if (callbacks != null) callbacks.OnPostJsonEncode();
-            return creator.ToString();
+            return ToString();
         }
         #endregion
 
         #region JSON text output methods
 
         public void LineBreak()
-        {      
+        {
             if (!prettyPrint) return;
 
             //Remove any whitespace from the end of this line
@@ -115,7 +147,7 @@ namespace Pixelbyte.Json
             builder.Append("}");
         }
 
-       void EatEndingWhitespace()
+        void EatEndingWhitespace()
         {
             while (builder.Length > 0 && char.IsWhiteSpace(builder[builder.Length - 1])) builder.Length--;
         }
@@ -258,7 +290,7 @@ namespace Pixelbyte.Json
                 if (encode != null)
                     encode(value, this);
                 else
-                    Encode(value, this);
+                    Encode(value);
             }
         }
 
