@@ -10,15 +10,15 @@ namespace Pixelbyte.Json
     /// to be compatible with Unity3D
     /// reference: https://www.json.org/
     /// </summary>
-    public class JSONParser
+    public class JsonParser
     {
-        JSONTokenizer tokenizer;
+        JsonTokenizer tokenizer;
         List<string> errors;
 
         //This Parsed result, if no errors, will be a JsonObject
-        public JSONObject rootObject;
+        public JsonObject rootObject;
 
-        public JSONTokenizer Tokenizer { get { return tokenizer; } }
+        public JsonTokenizer Tokenizer { get { return tokenizer; } }
 
         public List<string> Errors { get { return errors; } }
         /// <summary>
@@ -42,14 +42,14 @@ namespace Pixelbyte.Json
             }
         }
 
-        private JSONParser(JSONTokenizer tok)
+        private JsonParser(JsonTokenizer tok)
         {
             tokenizer = tok;
             Successful = true;
             errors = new List<string>();
         }
 
-        public static JSONParser ParseFile(string filename)
+        public static JsonParser ParseFile(string filename)
         {
             if (!File.Exists(filename))
                 throw new FileNotFoundException();
@@ -62,10 +62,10 @@ namespace Pixelbyte.Json
             return Parse(json);
         }
 
-        public static JSONParser Parse(string json)
+        public static JsonParser Parse(string json)
         {
-            JSONTokenizer tok = new JSONTokenizer();
-            JSONParser jp = new JSONParser(tok);
+            JsonTokenizer tok = new JsonTokenizer();
+            JsonParser jp = new JsonParser(tok);
 
             tok.Tokenize(json);
             //if (tok.Successful)
@@ -101,7 +101,7 @@ namespace Pixelbyte.Json
             return tok;
         }
 
-        JSONPair ParsePair()
+        JsonPair ParsePair()
         {
             if (PeekToken == null || PeekToken.Kind != TokenType.String)
             {
@@ -133,15 +133,15 @@ namespace Pixelbyte.Json
             if (PeekToken.Kind.Contains(TokenType.Value))
             {
                 var token = NextToken();
-                return new JSONPair(pairName, token.Literal);
+                return new JsonPair(pairName, token.Literal);
             }
             else if (PeekToken.Kind == TokenType.OpenCurly)
             {
-                return new JSONPair(pairName, ParseObject());
+                return new JsonPair(pairName, ParseObject());
             }
             else if (PeekToken.Kind == TokenType.OpenBracket)
             {
-                return new JSONPair(pairName, ParseArray());
+                return new JsonPair(pairName, ParseArray());
             }
             else
             {
@@ -151,9 +151,9 @@ namespace Pixelbyte.Json
 
         }
 
-        JSONObject ParseObject()
+        JsonObject ParseObject()
         {
-            JSONObject obj = new JSONObject();
+            JsonObject obj = new JsonObject();
 
             //Eat the OpenCurly Object
             NextToken();
@@ -244,7 +244,7 @@ namespace Pixelbyte.Json
             else if (PeekToken.Kind == TokenType.OpenBracket)
             {
                 var rootArray = ParseArray();
-                rootObject = new JSONObject(rootArray);
+                rootObject = new JsonObject(rootArray);
             }
         }
 

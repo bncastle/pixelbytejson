@@ -14,19 +14,19 @@ namespace Tests
         [Test]
         public void JSONParserNullException()
         {
-            Assert.Throws<ArgumentNullException>( () => JSONParser.Parse(String.Empty) );
+            Assert.Throws<ArgumentNullException>( () => JsonParser.Parse(String.Empty) );
         }
 
         [Test]
         public void JSONParserNonExistentFile()
         {
-            Assert.Throws<FileNotFoundException>( () => JSONParser.ParseFile("nonexistentfile.json"));
+            Assert.Throws<FileNotFoundException>( () => JsonParser.ParseFile("nonexistentfile.json"));
         }
 
         [Test]
         public void NonJSONData()
         {
-            var parser = JSONParser.Parse("hfjdsgkds");
+            var parser = JsonParser.Parse("hfjdsgkds");
             Assert.IsFalse(parser.Tokenizer.Successful);
             Assert.IsFalse(parser.Successful);
         }
@@ -34,7 +34,7 @@ namespace Tests
         [Test]
         public void EmptyObject()
         {
-            var parser = JSONParser.Parse("{}");
+            var parser = JsonParser.Parse("{}");
             Assert.IsTrue(parser.Tokenizer.Successful);
             Assert.IsTrue(parser.Successful);
         }
@@ -42,7 +42,7 @@ namespace Tests
         [Test]
         public void BadNumber()
         {
-            var parser = JSONParser.Parse(@"{""Number"" : 908,82f}");
+            var parser = JsonParser.Parse(@"{""Number"" : 908,82f}");
             Assert.IsFalse(parser.Tokenizer.Successful);
             Console.WriteLine(parser.Tokenizer.AllErrors);
             Console.WriteLine(parser.AllErrors);

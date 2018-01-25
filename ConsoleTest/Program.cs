@@ -26,7 +26,7 @@ namespace Pixelbyte.Json
             //if (sc != null)
             //    Console.WriteLine(sc.ToString());
 
-            JSONEncoder.SetTypeEncoder(typeof(Bounds), (obj, builder) =>
+            JsonEncoder.SetTypeEncoder(typeof(Bounds), (obj, builder) =>
             {
                 var type = obj.GetType();
                 var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -42,7 +42,7 @@ namespace Pixelbyte.Json
             });
 
             Bounds b = new Bounds(23.5f, 54.0f, 120.0f, 64.1f);
-            string bounds = JSONEncoder.Encode(b);
+            string bounds = JsonEncoder.Encode(b);
             Console.WriteLine(bounds);
 
             //TestJsonParser(@"..\..\..\TestJsonFiles\TestClass.json");
@@ -59,7 +59,7 @@ namespace Pixelbyte.Json
 
         private static void TestDeserialize()
         {
-            var jparser = JSONParser.ParseFile(@"..\..\..\SimpleClass.json");
+            var jparser = JsonParser.ParseFile(@"..\..\..\SimpleClass.json");
             string filename = @"..\..\..\ClassWithClassReference.json";
             if (!File.Exists(filename))
                 throw new FileNotFoundException();
@@ -70,7 +70,7 @@ namespace Pixelbyte.Json
                 json = sr.ReadToEnd();
             }
 
-            var sc = JSONDecoder.Decode<ClassWithClassReference>(json);
+            var sc = JsonDecoder.Decode<ClassWithClassReference>(json);
             if (sc != null)
                 Console.WriteLine(sc.ToString());
         }
@@ -79,7 +79,7 @@ namespace Pixelbyte.Json
         {
             Console.WriteLine("Parsing {0}", filename);
 
-            var jparser = JSONParser.ParseFile(filename);
+            var jparser = JsonParser.ParseFile(filename);
 
             //Show any Tokenizer errors
             if (!jparser.Tokenizer.Successful)

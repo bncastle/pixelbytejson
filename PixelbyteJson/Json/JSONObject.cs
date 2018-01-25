@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Pixelbyte.Json
 {
-    public class JSONObject : IEnumerable<KeyValuePair<string, object>>
+    public class JsonObject : IEnumerable<KeyValuePair<string, object>>
     {
         public Dictionary<string, object> pairs;
 
@@ -24,12 +24,12 @@ namespace Pixelbyte.Json
 
         public int Count { get { return pairs.Count; } }
 
-        public JSONObject()
+        public JsonObject()
         {
             pairs = new Dictionary<string, object>();
         }
 
-        public JSONObject(List<object> objectArray) : this()
+        public JsonObject(List<object> objectArray) : this()
         {
             rootArray = objectArray;
             IsArray = true;

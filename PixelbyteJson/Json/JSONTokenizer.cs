@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace Pixelbyte.Json
 {
-    public class JSONTokenizer
+    public class JsonTokenizer
     {
         //Matches a properly-formatted json number (except taht it allows multiple '.')
         static Regex jsonNumMatcher = new Regex(@"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$", RegexOptions.Compiled);
@@ -48,7 +48,7 @@ namespace Pixelbyte.Json
         /// </summary>
         public string AllErrors { get { return String.Join(Environment.NewLine, Errors.ToArray()); } }
 
-        public JSONTokenizer() { tokens = new List<Token>(); errors = new List<string>(); }
+        public JsonTokenizer() { tokens = new List<Token>(); errors = new List<string>(); }
 
         public void Tokenize(string json)
         {

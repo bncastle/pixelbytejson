@@ -10,7 +10,7 @@ namespace Pixelbyte.Json
     /// <summary>
     /// Helps with building the JSON string when we serialize a class
     /// </summary>
-    public class JSONEncoder
+    public class JsonEncoder
     {
         //The presence of this string as a key in a Json object indicates the 
         //type of object that it represents if it is present. Otherwise, we just fit
@@ -18,7 +18,7 @@ namespace Pixelbyte.Json
         //abstract class but the actual value is a subclass of it.
         public const string TypeNameString = "@type";
 
-        public delegate void EncodeCallback(object obj, JSONEncoder encoder);
+        public delegate void EncodeCallback(object obj, JsonEncoder encoder);
 
         //Contains all supported JSON encoders
         static Dictionary<Type, EncodeCallback> typeEncoders;
@@ -30,7 +30,7 @@ namespace Pixelbyte.Json
 
         int indentLevel;
 
-        static JSONEncoder() { typeEncoders = new Dictionary<Type, EncodeCallback>(); AddDefaults(); }
+        static JsonEncoder() { typeEncoders = new Dictionary<Type, EncodeCallback>(); AddDefaults(); }
 
         #region Static Encoder Methods
 
@@ -42,7 +42,7 @@ namespace Pixelbyte.Json
 
         #endregion
 
-        public JSONEncoder(bool prettyPrint, bool storeTypeInformation)
+        public JsonEncoder(bool prettyPrint, bool storeTypeInformation)
         {
             builder = new StringBuilder();
             this.prettyPrint = prettyPrint;
@@ -52,7 +52,7 @@ namespace Pixelbyte.Json
 
         public static string Encode(object obj, bool storeTypeInfo = false, bool prettyPrint = true)
         {
-            JSONEncoder creator = new JSONEncoder(prettyPrint, storeTypeInfo);
+            JsonEncoder creator = new JsonEncoder(prettyPrint, storeTypeInfo);
             creator.Encode(obj);
             return creator.ToString();
         }

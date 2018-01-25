@@ -41,18 +41,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EncodeInfo.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Interfaces\IJsonDecodeCallbacks.cs" />
     <Compile Include="Interfaces\IJsonEncodeCallbacks.cs" />
-    <Compile Include="Interfaces\IJsonEncodingControl.cs" />
+    <Compile Include="Interfaces\IJsonEncodeControl.cs" />
     <Compile Include="InternalExtensionMethods.cs" />
     <Compile Include="JsonAttributes.cs" />
-    <Compile Include="Json\JSONDecoder.cs" />
-    <Compile Include="Json\JSONEncoder.cs" />
-    <Compile Include="Json\JSONObject.cs" />
-    <Compile Include="Json\JSONPair.cs" />
-    <Compile Include="Json\JSONParser.cs" />
-    <Compile Include="Json\JSONTokenizer.cs" />
+    <Compile Include="Json\JsonDecoder.cs" />
+    <Compile Include="Json\JsonEncoder.cs" />
+    <Compile Include="Json\JsonObject.cs" />
+    <Compile Include="Json\JsonPair.cs" />
+    <Compile Include="Json\JsonParser.cs" />
+    <Compile Include="Json\JsonTokenizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Json\Token.cs" />
     <Compile Include="Json\TokenType.cs" />

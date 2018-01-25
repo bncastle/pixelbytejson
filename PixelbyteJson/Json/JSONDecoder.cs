@@ -6,9 +6,9 @@ using System.Reflection;
 namespace Pixelbyte.Json
 {
     // Define other methods and classes here
-    public static class JSONDecoder
+    public static class JsonDecoder
     {
-        public delegate object DecodeCallback(Type targetType, JSONObject jsonObj);
+        public delegate object DecodeCallback(Type targetType, JsonObject jsonObj);
         static Dictionary<Type, DecodeCallback> decoders;
         static DecodeCallback defaultDecoder;
 
@@ -30,7 +30,7 @@ namespace Pixelbyte.Json
             }
         }
 
-        static JSONDecoder()
+        static JsonDecoder()
         {
             decoders = new Dictionary<Type, DecodeCallback>();
             AddDefaults();
@@ -94,8 +94,8 @@ namespace Pixelbyte.Json
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
                 object obj = null;
-                if (jsonObj[JSONEncoder.TypeNameString] != null)
-                    obj = CreateObjectInstance(Type.GetType(jsonObj[JSONEncoder.TypeNameString].ToString()));
+                if (jsonObj[JsonEncoder.TypeNameString] != null)
+                    obj = CreateObjectInstance(Type.GetType(jsonObj[JsonEncoder.TypeNameString].ToString()));
                 else
                     obj = CreateObjectInstance(type);
 
@@ -133,7 +133,7 @@ namespace Pixelbyte.Json
 
         public static T Decode<T>(string json)
         {
-            var parser = JSONParser.Parse(json);
+            var parser = JsonParser.Parse(json);
             if (!parser.Tokenizer.Successful)
             {
                 //TODO: Make custom exception to show all tokenizer errors
@@ -156,7 +156,7 @@ namespace Pixelbyte.Json
             }
         }
 
-        static object Decode(JSONObject jsonObj, Type type)
+        static object Decode(JsonObject jsonObj, Type type)
         {
             if (jsonObj == null) throw new ArgumentNullException("jsonObj");
 
@@ -216,9 +216,9 @@ namespace Pixelbyte.Json
                     throw new Exception("DateTime value incorrect format: " + value.ToString());
             }
             //Other classes
-            else if (value is JSONObject)
+            else if (value is JsonObject)
             {
-                var childObj = value as JSONObject;
+                var childObj = value as JsonObject;
 
                 if (toType.HasInterface(typeof(IDictionary)))
                 {
@@ -239,7 +239,7 @@ namespace Pixelbyte.Json
                     decoder = GetDecoder(typeof(Array));
                 else
                     decoder = GetDecoderOrDefault(toType);
-                return decoder(toType, new JSONObject(childObj));
+                return decoder(toType, new JsonObject(childObj));
             }
             return value;
         }
