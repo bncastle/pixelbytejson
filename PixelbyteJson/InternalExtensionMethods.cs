@@ -91,7 +91,7 @@ namespace Pixelbyte.Json
             return type.GetCustomAttributes(typeof(T), inherit).Length > 0;
         }
 
-        //internal static T GetFirstAttribute<T>(this FieldInfo fi) where T : class
+        //internal static T GetFirstAttribute<T>(this FieldInfo fi) where T : Attribute
         //{
         //    var attrs = fi.GetCustomAttributes(typeof(T), false);
         //    if (attrs.Length == 0) return null;
