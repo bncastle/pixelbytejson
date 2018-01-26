@@ -13,16 +13,17 @@ namespace Pixelbyte.Json
     public class JsonEncoder
     {
         //The presence of this string as a key in a Json object indicates the 
-        //type of object that it represents if it is present. Otherwise, we just fit
-        //the object to the type of the field. This field is necessary when the field is some 
+        //type of object that it represents. If it isn't in the JSON data, we try to fit
+        //the object to the type of the field. Having type information is necessary when the field is some 
         //abstract class but the actual value is a subclass of it.
         public const string TypeNameString = "@type";
 
-        public delegate void EncodeCallback(object obj, JsonEncoder encoder);
+        //Signature for all EncodeCallback methods
+        public delegate void EncodeMethod(object obj, JsonEncoder encoder);
 
         //Contains all supported JSON encoders
-        static Dictionary<Type, EncodeCallback> typeEncoders;
-        static EncodeCallback defaultTypeEncoder;
+        static Dictionary<Type, EncodeMethod> typeEncoders;
+        static EncodeMethod defaultTypeEncoder;
 
         StringBuilder builder;
         bool prettyPrint;
@@ -30,15 +31,15 @@ namespace Pixelbyte.Json
 
         int indentLevel;
 
-        static JsonEncoder() { typeEncoders = new Dictionary<Type, EncodeCallback>(); AddDefaults(); }
+        static JsonEncoder() { typeEncoders = new Dictionary<Type, EncodeMethod>(); AddDefaults(); }
 
         #region Static Encoder Methods
 
-        public static void SetTypeEncoder(Type type, EncodeCallback encodeFunc) { typeEncoders[type] = encodeFunc; }
+        public static void SetTypeEncoder(Type type, EncodeMethod encodeFunc) { typeEncoders[type] = encodeFunc; }
         public static void RemoveTypeEncoder(Type type) { typeEncoders.Remove(type); }
         public static void ClearTypeEncoders() { typeEncoders.Clear(); }
-        public EncodeCallback GetTypeEncoder(Type type) { EncodeCallback callback = null; typeEncoders.TryGetValue(type, out callback); return callback; }
-        public EncodeCallback GetTypeEncoderOrDefault(Type type) { EncodeCallback callback = GetTypeEncoder(type); if (callback == null) callback = defaultTypeEncoder; return callback; }
+        public EncodeMethod GetTypeEncoder(Type type) { EncodeMethod callback = null; typeEncoders.TryGetValue(type, out callback); return callback; }
+        public EncodeMethod GetTypeEncoderOrDefault(Type type) { EncodeMethod callback = GetTypeEncoder(type); if (callback == null) callback = defaultTypeEncoder; return callback; }
 
         #endregion
 
@@ -62,7 +63,7 @@ namespace Pixelbyte.Json
             EncodeInfo encodeData = new EncodeInfo();
             control.GetSerializedData(encodeData);
             if (encodeData.Count == 0)
-                throw new Exception(string.Format("Object of Type {0} implements IJsonEncodingControl but returned no Encoding Data!", control.GetType().Name));
+                throw new Exception(string.Format("Object of Type {0} implements {1} but returned no EncodeInfo data!", control.GetType().Name, typeof(IJsonEncodeControl).Name));
 
             BeginObject();
             foreach (KeyValuePair<string, object> item in encodeData)
@@ -279,7 +280,7 @@ namespace Pixelbyte.Json
             {
                 var type = value.GetType();
 
-                EncodeCallback encode = null;
+                EncodeMethod encode = null;
                 //Try a dictionary first
                 if (type.HasInterface(typeof(IDictionary)))
                     encode = GetTypeEncoder(typeof(IDictionary));

@@ -8,9 +8,11 @@ namespace Pixelbyte.Json
     // Define other methods and classes here
     public static class JsonDecoder
     {
-        public delegate object DecodeCallback(Type targetType, JsonObject jsonObj);
-        static Dictionary<Type, DecodeCallback> decoders;
-        static DecodeCallback defaultDecoder;
+        //Signature for all Decode methods
+        public delegate object DecodeMethod(Type targetType, JsonObject jsonObj);
+
+        static Dictionary<Type, DecodeMethod> decoders;
+        static DecodeMethod defaultDecoder;
 
         static Func<Type, object> CreateObjectInstance;
 
@@ -32,7 +34,7 @@ namespace Pixelbyte.Json
 
         static JsonDecoder()
         {
-            decoders = new Dictionary<Type, DecodeCallback>();
+            decoders = new Dictionary<Type, DecodeMethod>();
             CreateObjectInstance = (type) => Activator.CreateInstance(type, true);
             AddDefaults();
         }
@@ -124,10 +126,10 @@ namespace Pixelbyte.Json
 
         #region Decoder Methods
 
-        public static void SetDecoder(Type type, DecodeCallback decodeFunc) { decoders[type] = decodeFunc; }
+        public static void SetDecoder(Type type, DecodeMethod decodeFunc) { decoders[type] = decodeFunc; }
         public static void RemoveDecoder(Type type) { decoders.Remove(type); }
-        static DecodeCallback GetDecoder(Type type) { DecodeCallback callback = null; decoders.TryGetValue(type, out callback); return callback; }
-        static DecodeCallback GetDecoderOrDefault(Type type) { DecodeCallback callback = GetDecoder(type); if (callback == null) callback = defaultDecoder; return callback; }
+        static DecodeMethod GetDecoder(Type type) { DecodeMethod callback = null; decoders.TryGetValue(type, out callback); return callback; }
+        static DecodeMethod GetDecoderOrDefault(Type type) { DecodeMethod callback = GetDecoder(type); if (callback == null) callback = defaultDecoder; return callback; }
         public static void ClearDecoders() { decoders.Clear(); }
 
         #endregion
@@ -233,7 +235,7 @@ namespace Pixelbyte.Json
             else if (value is List<object>)
             {
                 var childObj = value as List<object>;
-                DecodeCallback decoder = null;
+                DecodeMethod decoder = null;
                 if (toType.IsGeneric(typeof(List<>)))
                     decoder = GetDecoder(typeof(IList));
                 else if (toType.IsArray)
