@@ -317,20 +317,27 @@ namespace Pixelbyte.Json
 
                 builder.WriteTypeInfoIfAttributePresent(type);
 
-                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                //Run through all base types so we can grab any private fields from any classes
+                //upstream that have JSONInclude attributes
+                while (type != null)
                 {
-                    //If the field is private or protected we need to check and see if it has an attribute that allows us to include it
-                    //Or if the field should be excluded, then skip it
-                    if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
-                        || field.HasAttribute<JsonExcludeAttribute>())
-                        continue;
+                    foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                    {
+                        //If the field is private or protected we need to check and see if it has an attribute that allows us to include it
+                        //Or if the field should be excluded, then skip it
+                        if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
+                            || field.HasAttribute<JsonExcludeAttribute>())
+                            continue;
 
-                    var value = field.GetValue(obj);
-                    builder.EncodePair(field.Name, value);
+                        var value = field.GetValue(obj);
+                        builder.EncodePair(field.Name, value);
 
-                    //Format for another name value pair
-                    builder.Comma();
-                    builder.LineBreak();
+                        //Format for another name value pair
+                        builder.Comma();
+                        builder.LineBreak();
+                    }
+
+                    type = type.BaseType;
                 }
                 builder.EndObject();
             });

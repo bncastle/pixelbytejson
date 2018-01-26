@@ -102,23 +102,32 @@ namespace Pixelbyte.Json
                 else
                     obj = CreateObjectInstance(type);
 
-                var fieldInfos = obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                var actualType = obj.GetType();
 
-                //What to do here? Nothing maybe?
-                if (fieldInfos == null)
-                    throw new Exception();
-
-                foreach (var fi in fieldInfos)
+                //Run through all upstream types of this object to make sure we get all upstream private variables
+                //that should be serialized
+                while(actualType != null)
                 {
-                    //Look for the field name in the json object's data
-                    var parameter = jsonObj[fi.Name];
-                    if (parameter == null && !jsonObj.KeyExists(fi.Name))
+                    var fieldInfos = actualType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+
+                    foreach (var field in fieldInfos)
                     {
-                        //TODO: An error or warning??
-                        continue;
+                        if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
+                            || field.HasAttribute<JsonExcludeAttribute>())
+                            continue;
+
+                        //Look for the field name in the json object's data
+                        var parameter = jsonObj[field.Name];
+                        if (parameter == null && !jsonObj.KeyExists(field.Name))
+                        {
+                            //TODO: An error or warning??
+                            continue;
+                        }
+                        else
+                            field.SetValue(obj, DecodeValue(parameter, field.FieldType));
                     }
-                    else
-                        fi.SetValue(obj, DecodeValue(parameter, fi.FieldType));
+
+                    actualType = actualType.BaseType;
                 }
                 return obj;
             });
