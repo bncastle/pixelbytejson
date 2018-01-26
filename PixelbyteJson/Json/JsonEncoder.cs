@@ -42,7 +42,7 @@ namespace Pixelbyte.Json
 
         #endregion
 
-        public JsonEncoder(bool prettyPrint, bool storeTypeInformation)
+        JsonEncoder(bool prettyPrint)
         {
             builder = new StringBuilder();
             this.prettyPrint = prettyPrint;
@@ -50,9 +50,9 @@ namespace Pixelbyte.Json
 
         #region Encode methods
 
-        public static string Encode(object obj, bool storeTypeInfo = false, bool prettyPrint = true)
+        public static string Encode(object obj, bool prettyPrint = true)
         {
-            JsonEncoder creator = new JsonEncoder(prettyPrint, storeTypeInfo);
+            JsonEncoder creator = new JsonEncoder(prettyPrint);
             creator.Encode(obj);
             return creator.ToString();
         }
