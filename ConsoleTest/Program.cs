@@ -15,8 +15,12 @@ namespace Pixelbyte.Json
             //TestDeserialize(); 
 
             //SimpleClass sc = new SimpleClass() { name = "Fredrick", age = 23, temperature = 36.3476437f };
-            //string json = Jsonizer.Ser(sc);
+            //string json = JsonEncoder.Encode(sc);
             //Console.WriteLine(json);
+
+            //string tst = @"{""name"" : ""Forodoro"", ""age"" : 23, ""temperature"": 2.356e-10 }";
+            //var dec = JsonDecoder.Decode<SimpleClass>(tst);
+            //Console.WriteLine(dec.ToString());
 
             //ClassWithClassReference cr = new ClassWithClassReference() { name = "Jalopnik", age = 43, isMale = false, pet = new Animal() { name = "Tortuga", ferocity = Ferocity.Docile }, temperature = 98.6f };
             //string js = Jsonizer.Serialize(cr);

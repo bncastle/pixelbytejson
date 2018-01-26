@@ -33,6 +33,7 @@ namespace Pixelbyte.Json
         static JsonDecoder()
         {
             decoders = new Dictionary<Type, DecodeCallback>();
+            CreateObjectInstance = (type) => Activator.CreateInstance(type, true);
             AddDefaults();
         }
 

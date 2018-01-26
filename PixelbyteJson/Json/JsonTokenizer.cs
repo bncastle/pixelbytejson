@@ -8,8 +8,8 @@ namespace Pixelbyte.Json
 {
     public class JsonTokenizer
     {
-        //Matches a properly-formatted json number (except taht it allows multiple '.')
-        static Regex jsonNumMatcher = new Regex(@"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$", RegexOptions.Compiled);
+        //Matches a properly-formatted json number
+        static Regex jsonNumMatcher = new Regex(@"^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$", RegexOptions.Compiled);
         //Matches a 4-digit HEX number
         static Regex hexNumber = new Regex(@"[0-9a-fA-F]{4}", RegexOptions.Compiled);
 
@@ -33,7 +33,7 @@ namespace Pixelbyte.Json
         //What line of the string we are curently on
         int line = 0;
 
-        //This is where we'll stor a multi-character token
+        //This is where we'll store a multi-character token
         StringBuilder sb = new StringBuilder();
         List<string> errors;
 
