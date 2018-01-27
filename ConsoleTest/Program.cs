@@ -33,6 +33,7 @@ namespace Pixelbyte.Json
             JsonEncoder.SetTypeEncoder(typeof(Bounds), (obj, builder) =>
             {
                 var type = obj.GetType();
+
                 var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
                 builder.BeginObject();

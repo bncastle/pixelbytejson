@@ -16,6 +16,19 @@ namespace Pixelbyte.Json
     /// </summary>
     public class JsonTypeHint : Attribute { }
 
+    /// <summary>
+    /// Apply this attribute to a field to change what it is called in the JSON 
+    /// </summary>
+    public class JsonName : Attribute
+    {
+        string name;
+
+        public string Name { get { return name; } }
+
+        public JsonName(string name) { this.name = name; }
+
+    }
+
     ///If present on a float, double, or decimal field then it restricts the max decimal places to the number given
     //public class JsonMaxDecimalPlacesAttribute : Attribute
     //{

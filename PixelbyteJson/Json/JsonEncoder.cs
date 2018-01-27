@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -12,11 +11,13 @@ namespace Pixelbyte.Json
     /// </summary>
     public class JsonEncoder
     {
+        internal const BindingFlags DEFAULT_JSON_BINDING_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+
         //The presence of this string as a key in a Json object indicates the 
         //type of object that it represents. If it isn't in the JSON data, we try to fit
         //the object to the type of the field. Having type information is necessary when the field is some 
         //abstract class but the actual value is a subclass of it.
-        public const string TypeNameString = "@type";
+        internal const string TypeNameString = "@type";
 
         //Signature for all EncodeCallback methods
         public delegate void EncodeMethod(object obj, JsonEncoder encoder);
@@ -66,6 +67,9 @@ namespace Pixelbyte.Json
                 throw new Exception(string.Format("Object of Type {0} implements {1} but returned no EncodeInfo data!", control.GetType().Name, typeof(IJsonEncodeControl).Name));
 
             BeginObject();
+            //Include type information
+            WriteTypeInfoIfAttributePresent(control.GetType());
+
             foreach (KeyValuePair<string, object> item in encodeData)
             {
                 EncodePair(item.Key, item.Value);
@@ -124,14 +128,6 @@ namespace Pixelbyte.Json
             startOfLine = false;
             for (int i = 0; i < indentLevel; i++)
                 builder.Append('\t');
-        }
-
-        void DeIndent()
-        {
-            if (!startOfLine) return;
-            if (builder.Length - indentLevel > 0)
-                builder.Length = builder.Length - indentLevel;
-            indentLevel--;
         }
 
         public void BeginObject(bool newline = true) { Indent(); builder.Append('{'); indentLevel++; if (newline) LineBreak(); }
@@ -317,28 +313,16 @@ namespace Pixelbyte.Json
 
                 builder.WriteTypeInfoIfAttributePresent(type);
 
-                //Run through all base types so we can grab any private fields from any classes
-                //upstream that have JSONInclude attributes
-                while (type != null)
+                type.EnumerateFields(DEFAULT_JSON_BINDING_FLAGS, (field, jsonName) =>
                 {
-                    foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
-                    {
-                        //If the field is private or protected we need to check and see if it has an attribute that allows us to include it
-                        //Or if the field should be excluded, then skip it
-                        if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
-                            || field.HasAttribute<JsonExcludeAttribute>())
-                            continue;
+                    var value = field.GetValue(obj);
+                    builder.EncodePair(jsonName, value);
 
-                        var value = field.GetValue(obj);
-                        builder.EncodePair(field.Name, value);
+                    //Format for another name value pair
+                    builder.Comma();
+                    builder.LineBreak();
+                });
 
-                        //Format for another name value pair
-                        builder.Comma();
-                        builder.LineBreak();
-                    }
-
-                    type = type.BaseType;
-                }
                 builder.EndObject();
             });
 

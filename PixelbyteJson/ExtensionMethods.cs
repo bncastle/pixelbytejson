@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace Pixelbyte.Json
 {
-    internal static class InternalExtensionMethods
+    public static class ExtensionMethods
     {
         internal static bool Contains(this char[] array, char c)
         {
@@ -11,8 +11,6 @@ namespace Pixelbyte.Json
                 if (array[i] == c) return true;
             return false;
         }
-
-        //internal static bool Contains(this char[] array, int c) { if (c < 0) return false; return Contains(array, (char)c); }
 
         internal static int CountChar(this string text, char c)
         {
@@ -91,11 +89,41 @@ namespace Pixelbyte.Json
             return type.GetCustomAttributes(typeof(T), inherit).Length > 0;
         }
 
-        //internal static T GetFirstAttribute<T>(this FieldInfo fi) where T : Attribute
+        internal static T GetFirstAttribute<T>(this FieldInfo fi) where T : Attribute
+        {
+            var attrs = fi.GetCustomAttributes(typeof(T), false);
+            if (attrs.Length == 0) return null;
+            else return attrs[0] as T;
+        }
+
+        //public static void EnumerateFields(this Type type, Action<FieldInfo,string> fieldOperation)
         //{
-        //    var attrs = fi.GetCustomAttributes(typeof(T), false);
-        //    if (attrs.Length == 0) return null;
-        //    else return attrs[0] as T;
+        //    type.EnumerateFields(JsonEncoder.DEFAULT_JSON_BINDING_FLAGS, fieldOperation);
         //}
+
+        internal static void EnumerateFields(this Type type, BindingFlags flags, Action<FieldInfo,string> fieldOperation)
+        {
+            //Run through all upstream types of this object to make sure we get all upstream private variables
+            //that should be serialized
+            while (type != null)
+            {
+                var fieldInfos = type.GetFields(flags);
+
+                foreach (var field in fieldInfos)
+                {
+                    if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
+                        || field.HasAttribute<JsonExcludeAttribute>())
+                        continue;
+
+                    //See if the field has a JsonName attribute
+                    var nameAttribute = field.GetFirstAttribute<JsonName>();
+                    var jsonName = (nameAttribute != null) ? nameAttribute.Name : field.Name;
+
+                    //Operate on the field
+                    fieldOperation(field, jsonName);
+                }
+                type = type.BaseType;
+            }
+        }
     }
 }

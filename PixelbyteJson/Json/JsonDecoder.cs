@@ -98,37 +98,28 @@ namespace Pixelbyte.Json
 
                 object obj = null;
                 if (jsonObj[JsonEncoder.TypeNameString] != null)
+                {
                     obj = CreateObjectInstance(Type.GetType(jsonObj[JsonEncoder.TypeNameString].ToString()));
+                }
                 else
                     obj = CreateObjectInstance(type);
 
-                var actualType = obj.GetType();
+                var objectType = obj.GetType();
 
-                //Run through all upstream types of this object to make sure we get all upstream private variables
-                //that should be serialized
-                while(actualType != null)
+                objectType.EnumerateFields(JsonEncoder.DEFAULT_JSON_BINDING_FLAGS, (field, jsonName) =>
                 {
-                    var fieldInfos = actualType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-
-                    foreach (var field in fieldInfos)
+                    //Look for the field name in the json object's data
+                    var parameter = jsonObj[jsonName];
+                    if (jsonObj.KeyExists(jsonName))
                     {
-                        if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
-                            || field.HasAttribute<JsonExcludeAttribute>())
-                            continue;
-
-                        //Look for the field name in the json object's data
-                        var parameter = jsonObj[field.Name];
-                        if (parameter == null && !jsonObj.KeyExists(field.Name))
-                        {
-                            //TODO: An error or warning??
-                            continue;
-                        }
-                        else
-                            field.SetValue(obj, DecodeValue(parameter, field.FieldType));
+                        field.SetValue(obj, DecodeValue(parameter, field.FieldType));
                     }
+                    //else
+                    //{
+                    //    //TODO: An error or warning??
+                    //}
+                });
 
-                    actualType = actualType.BaseType;
-                }
                 return obj;
             });
         }
