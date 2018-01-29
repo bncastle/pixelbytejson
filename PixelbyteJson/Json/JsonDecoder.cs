@@ -209,7 +209,14 @@ namespace Pixelbyte.Json
             else if (toType == typeof(Single))
                 value = Convert.ToSingle(value);
             else if (toType.IsEnum)
-                value = Enum.Parse(toType, value.ToString());
+            {
+                //parse an enum from a string
+                if (value is string)
+                    value = Enum.Parse(toType, value.ToString());
+                else
+                    //To parse an enum from a number
+                    value = Enum.ToObject(toType, value);
+            }
             else if (toType == typeof(DateTime))
             {
                 DateTime dateTime;

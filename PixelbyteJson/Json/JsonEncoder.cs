@@ -27,15 +27,21 @@ namespace Pixelbyte.Json
         static EncodeMethod defaultTypeEncoder;
 
         StringBuilder builder;
+        //format the JSON output with newlines and tabs
         bool prettyPrint;
-        bool startOfLine = true;
 
+        /// <summary>
+        /// If true, then any enums are encoded as their actual string value
+        /// False encodes enums as ints
+        /// </summary>
+        bool enumsAsStrings;
+
+        bool startOfLine = true;
         int indentLevel;
 
         static JsonEncoder() { typeEncoders = new Dictionary<Type, EncodeMethod>(); AddDefaults(); }
 
         #region Static Encoder Methods
-
         public static void SetTypeEncoder(Type type, EncodeMethod encodeFunc) { typeEncoders[type] = encodeFunc; }
         public static void RemoveTypeEncoder(Type type) { typeEncoders.Remove(type); }
         public static void ClearTypeEncoders() { typeEncoders.Clear(); }
@@ -44,17 +50,18 @@ namespace Pixelbyte.Json
 
         #endregion
 
-        JsonEncoder(bool prettyPrint)
+        JsonEncoder(bool enumsAsStrings, bool prettyPrint)
         {
             builder = new StringBuilder();
             this.prettyPrint = prettyPrint;
+            this.enumsAsStrings = enumsAsStrings;
         }
 
         #region Encode methods
 
-        public static string Encode(object obj, bool prettyPrint = true)
+        public static string Encode(object obj, bool prettyPrint = true, bool enumsAsStrings = false)
         {
-            JsonEncoder creator = new JsonEncoder(prettyPrint);
+            JsonEncoder creator = new JsonEncoder(enumsAsStrings, prettyPrint);
             creator.Encode(obj);
             return creator.ToString();
         }
@@ -192,7 +199,13 @@ namespace Pixelbyte.Json
             else if (value is bool) Bool((bool)value);
             else if (value is string) String((string)value);
             else if (value is DateTime) String(value.ToString());
-            else if (value.GetType().IsEnum) String(value.ToString());
+            else if (value.GetType().IsEnum)
+            {
+                if (enumsAsStrings)
+                    String(value.ToString());
+                else
+                    Number((int)value);
+            }
             else if (value is char) String(value.ToString());
             else if (value.GetType().IsNumeric()) Number(value);
             else throw new NotImplementedException("Type: " + value.ToString() + " not implemented");
