@@ -11,7 +11,7 @@ namespace Pixelbyte.Json
     /// </summary>
     public class JsonEncoder
     {
-        internal const BindingFlags DEFAULT_JSON_BINDING_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+        public const BindingFlags DEFAULT_JSON_BINDING_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
 
         //The presence of this string as a key in a Json object indicates the 
         //type of object that it represents. If it isn't in the JSON data, we try to fit
@@ -43,6 +43,7 @@ namespace Pixelbyte.Json
 
         #region Static Encoder Methods
         public static void SetTypeEncoder(Type type, EncodeMethod encodeFunc) { typeEncoders[type] = encodeFunc; }
+        public static void SetDefaultEncoder(EncodeMethod defaultEncoder) { defaultTypeEncoder = defaultEncoder; }
         public static void RemoveTypeEncoder(Type type) { typeEncoders.Remove(type); }
         public static void ClearTypeEncoders() { typeEncoders.Clear(); }
         public EncodeMethod GetTypeEncoder(Type type) { EncodeMethod callback = null; typeEncoders.TryGetValue(type, out callback); return callback; }
@@ -161,10 +162,7 @@ namespace Pixelbyte.Json
             int index = builder.Length - 1;
 
             while (index > 0 && char.IsWhiteSpace(builder[index]) && builder[index] != c)
-            {
-                UnityEngine.Debug.Log(builder[index]);
                 index--;
-            }
 
             //Be sure to remove the character stored in c also but ONLY if it is c!
             if (index < builder.Length - 1 && builder[index] == c)
