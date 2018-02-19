@@ -178,9 +178,8 @@ namespace Pixelbyte.Json
         {
             indentLevel--;
             ////There will also be a space after the comma so we include that too
-            if (builder[builder.Length - 3] == ',')
+            if (EatFromEnd(','))
             {
-                builder.Length = builder.Length - 3;
                 LineBreak();
             }
             Indent();
