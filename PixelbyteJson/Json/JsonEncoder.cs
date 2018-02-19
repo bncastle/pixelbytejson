@@ -161,10 +161,13 @@ namespace Pixelbyte.Json
             int index = builder.Length - 1;
 
             while (index > 0 && char.IsWhiteSpace(builder[index]) && builder[index] != c)
+            {
+                UnityEngine.Debug.Log(builder[index]);
                 index--;
+            }
 
-            //Be sure to remove the character stored in c also
-            if (index < builder.Length - 1)
+            //Be sure to remove the character stored in c also but ONLY if it is c!
+            if (index < builder.Length - 1 && builder[index] == c)
             {
                 builder.Length = index;
                 return true;
