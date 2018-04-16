@@ -13,6 +13,13 @@ namespace Pixelbyte.Json
 
         static Dictionary<Type, DecodeMethod> decoders;
         static DecodeMethod defaultDecoder;
+        
+        /// <summary>
+        /// This method gets the given type from a string
+        /// It may need to be overridden if the calling program 
+        /// has custom types that it knows about that we don't
+        /// </summary>
+        static Func<string, Type> TypeFromString;
 
         static Func<Type, object> CreateObjectInstance;
 
@@ -20,7 +27,7 @@ namespace Pixelbyte.Json
         /// Set this to override how the Default Decoder creates the objects
         /// Note: I'm using this so I can call ScriptableObject.CreateInstance in Unity3D
         /// </summary>
-        public static Func<Type, object> CreatInstanceMethod
+        public static Func<Type, object> CreateInstanceMethod
         {
             get { return CreateObjectInstance; }
             set
@@ -32,10 +39,26 @@ namespace Pixelbyte.Json
             }
         }
 
+        public static Func<string, Type> TypeFromStringMethod
+        {
+            get { return TypeFromString; }
+            set
+            {
+                if (value == null)
+                    TypeFromString = (typeText) => Type.GetType(typeText);
+                else
+                    TypeFromString = value;
+            }
+        }
+
         static JsonDecoder()
         {
             decoders = new Dictionary<Type, DecodeMethod>();
-            CreateObjectInstance = (type) => Activator.CreateInstance(type, true);
+
+            //Set these to their defaults
+            CreateObjectInstance = null;
+            TypeFromStringMethod = null;
+
             AddDefaults();
         }
 
@@ -99,7 +122,7 @@ namespace Pixelbyte.Json
                 object obj = null;
                 if (jsonObj[JsonEncoder.TypeNameString] != null)
                 {
-                    obj = CreateObjectInstance(Type.GetType(jsonObj[JsonEncoder.TypeNameString].ToString()));
+                    obj = CreateObjectInstance(TypeFromStringMethod(jsonObj[JsonEncoder.TypeNameString].ToString()));
                 }
                 else
                     obj = CreateObjectInstance(type);

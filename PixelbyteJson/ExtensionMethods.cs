@@ -79,17 +79,17 @@ namespace Pixelbyte.Json
             }
         }
 
-        internal static bool HasAttribute<T>(this FieldInfo fi) where T : Attribute
+        public static bool HasAttribute<T>(this FieldInfo fi) where T : Attribute
         {
             return fi.GetCustomAttributes(typeof(T), false).Length > 0;
         }
 
-        internal static bool HasAttribute<T>(this Type type, bool inherit) where T : Attribute
+        public static bool HasAttribute<T>(this Type type, bool inherit) where T : Attribute
         {
             return type.GetCustomAttributes(typeof(T), inherit).Length > 0;
         }
 
-        internal static T GetFirstAttribute<T>(this FieldInfo fi) where T : Attribute
+        public static T GetFirstAttribute<T>(this FieldInfo fi) where T : Attribute
         {
             var attrs = fi.GetCustomAttributes(typeof(T), false);
             if (attrs.Length == 0) return null;
@@ -101,7 +101,7 @@ namespace Pixelbyte.Json
         //    type.EnumerateFields(JsonEncoder.DEFAULT_JSON_BINDING_FLAGS, fieldOperation);
         //}
 
-        internal static void EnumerateFields(this Type type, BindingFlags flags, Action<FieldInfo,string> fieldOperation)
+        public static void EnumerateFields(this Type type, BindingFlags flags, Action<FieldInfo,string> fieldOperation)
         {
             //Run through all upstream types of this object to make sure we get all upstream private variables
             //that should be serialized

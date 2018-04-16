@@ -39,7 +39,7 @@ namespace Pixelbyte.Json
 
         public List<Token> tokens;
 
-        public bool Successful { get; private set; }
+        public bool Successful { get { return errors.Count == 0; } }
 
         public List<String> Errors { get { return errors; } }
 
@@ -57,7 +57,6 @@ namespace Pixelbyte.Json
             {
                 this.json = json;
                 errors.Clear();
-                Successful = true;
                 index = 0;
                 column = 1; //Start in column 1, not 0
                 line = 1; //Start on line 1
@@ -310,7 +309,6 @@ namespace Pixelbyte.Json
                 errors.Add(string.Format("Tokenizer [{0}:{1}] {2}", line, column, text));
             else
                 errors.Add(text);
-            Successful = false;
         }
     }
 }
