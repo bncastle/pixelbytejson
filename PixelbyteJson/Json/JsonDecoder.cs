@@ -55,7 +55,7 @@ namespace Pixelbyte.Json
             decoders = new Dictionary<Type, DecodeMethod>();
 
             //Set these to their defaults
-            CreateObjectInstance = null;
+            CreateInstanceMethod = null;
             TypeFromStringMethod = null;
 
             AddDefaults();
