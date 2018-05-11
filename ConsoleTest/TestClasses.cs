@@ -21,6 +21,14 @@ namespace Pixelbyte.Json
             width = w;
             height = h;
         }
+
+        static Random rng;
+        public static Bounds Rnd() {
+            if (rng == null)
+                rng = new Random();
+
+            return new Bounds((float)rng.NextDouble() * 100, (float)rng.NextDouble() * 100, (float)rng.NextDouble() * 100, (float)rng.NextDouble() * 100);
+        }
     }
 
     internal class SimpleClass
@@ -72,6 +80,8 @@ namespace Pixelbyte.Json
         public void OnJsonDecoded()
         {
             System.Console.WriteLine("Decoded a ClassWithClassReference");
+            Console.WriteLine(shouldNotBeSeen);
+            Console.WriteLine(doThisOne);
         }
 
         public override string ToString()

@@ -47,7 +47,21 @@ namespace Pixelbyte.Json
         public static void RemoveTypeEncoder(Type type) { typeEncoders.Remove(type); }
         public static void ClearTypeEncoders() { typeEncoders.Clear(); }
         public EncodeMethod GetTypeEncoder(Type type) { EncodeMethod callback = null; typeEncoders.TryGetValue(type, out callback); return callback; }
-        public EncodeMethod GetTypeEncoderOrDefault(Type type) { EncodeMethod callback = GetTypeEncoder(type); if (callback == null) callback = defaultTypeEncoder; return callback; }
+        public EncodeMethod GetTypeEncoderOrDefault(Type type)
+        {
+            EncodeMethod callback = GetTypeEncoder(type);
+            if (callback == null)
+            {
+                if (type.HasInterface(typeof(IEnumerable)))
+                    callback = GetTypeEncoder(typeof(IEnumerable));
+                else if (type.HasInterface(typeof(IDictionary)))
+                    callback = GetTypeEncoder(typeof(IDictionary));
+
+                if (callback == null)
+                    callback = defaultTypeEncoder;
+            }
+            return callback;
+        }
 
         #endregion
 

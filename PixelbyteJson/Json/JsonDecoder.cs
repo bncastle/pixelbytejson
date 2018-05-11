@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace Pixelbyte.Json
 {
@@ -13,7 +12,7 @@ namespace Pixelbyte.Json
 
         static Dictionary<Type, DecodeMethod> decoders;
         static DecodeMethod defaultDecoder;
-        
+
         /// <summary>
         /// This method gets the given type from a string
         /// It may need to be overridden if the calling program 
@@ -152,7 +151,25 @@ namespace Pixelbyte.Json
         public static void SetDecoder(Type type, DecodeMethod decodeFunc) { decoders[type] = decodeFunc; }
         public static void RemoveDecoder(Type type) { decoders.Remove(type); }
         static DecodeMethod GetDecoder(Type type) { DecodeMethod callback = null; decoders.TryGetValue(type, out callback); return callback; }
-        static DecodeMethod GetDecoderOrDefault(Type type) { DecodeMethod callback = GetDecoder(type); if (callback == null) callback = defaultDecoder; return callback; }
+        static DecodeMethod GetDecoderOrDefault(Type type)
+        {
+            DecodeMethod callback = GetDecoder(type);
+
+            if (callback == null)
+            {
+                if (type.HasInterface(typeof(IDictionary)))
+                    callback = GetDecoder(typeof(IDictionary));
+                else if (type.HasInterface(typeof(IList)))
+                    callback = GetDecoder(typeof(IList));
+                //else if (type.HasInterface(typeof(IEnumerable)))
+                //    callback = GetDecoder(typeof(IEnumerable));
+                else if (type.IsArray)
+                    callback = GetDecoder(typeof(Array));
+                if (callback == null)
+                    callback = defaultDecoder;
+            }
+            return callback;
+        }
         public static void ClearDecoders() { decoders.Clear(); }
 
         #endregion
@@ -204,7 +221,7 @@ namespace Pixelbyte.Json
         {
             if (value == null) return null;
 
-            if (value == typeof(bool) || value == typeof(string))
+            if (value.GetType() == typeof(bool) || value.GetType() == typeof(string))
                 return value;
             //Signed ints
             else if (toType == typeof(Int64))

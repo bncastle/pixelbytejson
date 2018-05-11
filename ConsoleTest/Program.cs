@@ -46,6 +46,17 @@ namespace Pixelbyte.Json
                 builder.EndObject();
             });
 
+            JsonDecoder.SetDecoder(typeof(Bounds), (type, jsonObj) =>
+            {
+                if (jsonObj == null) throw new ArgumentNullException("jsonObj");
+                return new Bounds(Convert.ToSingle(jsonObj["x"]), Convert.ToSingle(jsonObj["y"]), Convert.ToSingle(jsonObj["width"]), Convert.ToSingle(jsonObj["height"]));
+            });
+
+            List<Bounds> bb = new List<Bounds>() { Bounds.Rnd(), Bounds.Rnd(), Bounds.Rnd(), Bounds.Rnd() };
+            string boundsJson = JsonEncoder.Encode(bb, true);
+            Console.WriteLine(boundsJson);
+            var decodedBounds = JsonDecoder.Decode<List<Bounds>>(boundsJson);
+
             Bounds b = new Bounds(23.5f, 54.0f, 120.0f, 64.1f);
             string bounds = JsonEncoder.Encode(b);
             Console.WriteLine(bounds);
