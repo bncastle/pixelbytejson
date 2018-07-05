@@ -52,10 +52,10 @@ namespace Pixelbyte.Json
                 return new Bounds(Convert.ToSingle(jsonObj["x"]), Convert.ToSingle(jsonObj["y"]), Convert.ToSingle(jsonObj["width"]), Convert.ToSingle(jsonObj["height"]));
             });
 
-            //List<Bounds> bb = new List<Bounds>() { Bounds.Rnd(), Bounds.Rnd(), Bounds.Rnd(), Bounds.Rnd() };
-            //string boundsJson = JsonEncoder.Encode(bb, true);
-            //Console.WriteLine(boundsJson);
-            //var decodedBounds = JsonDecoder.Decode<List<Bounds>>(boundsJson);
+            List<Bounds> bb = new List<Bounds>() { Bounds.Rnd(), Bounds.Rnd(), null, Bounds.Rnd() };
+            string boundsJson = JsonEncoder.Encode(bb, true);
+            Console.WriteLine(boundsJson);
+            var decodedBounds = JsonDecoder.Decode<List<Bounds>>(boundsJson);
 
             //var decodedData = JsonDecoder.Decode<List<ItemData>>(testList);
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Pixelbyte.Json
 {
-    internal struct Bounds
+    internal class Bounds
     {
         private float x;
         private float y;
