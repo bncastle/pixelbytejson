@@ -52,10 +52,10 @@ namespace Pixelbyte.Json
                 return new Bounds(Convert.ToSingle(jsonObj["x"]), Convert.ToSingle(jsonObj["y"]), Convert.ToSingle(jsonObj["width"]), Convert.ToSingle(jsonObj["height"]));
             });
 
-            List<Bounds> bb = new List<Bounds>() { Bounds.Rnd(), Bounds.Rnd(), null, Bounds.Rnd() };
-            string boundsJson = JsonEncoder.Encode(bb, true);
-            Console.WriteLine(boundsJson);
-            var decodedBounds = JsonDecoder.Decode<List<Bounds>>(boundsJson);
+            //List<Bounds> bb = new List<Bounds>() { Bounds.Rnd(), Bounds.Rnd(), null, Bounds.Rnd() };
+            //string boundsJson = JsonEncoder.Encode(bb, true);
+            //Console.WriteLine(boundsJson);
+            //var decodedBounds = JsonDecoder.Decode<List<Bounds>>(boundsJson);
 
             //var decodedData = JsonDecoder.Decode<List<ItemData>>(testList);
 
@@ -86,13 +86,14 @@ namespace Pixelbyte.Json
 
             var l = new List<ItemData>()
             {
-                new ItemData() { description = "descript", id = "itemData", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee },
-                new ItemData() { description = "descript", id = "itemData", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee },
-                new ItemData() { description = "descript", id = "itemData", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee },
-                new ItemData() { description = "descript", id = "itemData", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee }};
+                new ItemData() { description = "descript", id = "cuffs", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee },
+                null,
+                new ItemData() { description = "descript", id = "fists", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee },
+                new ItemData() { description = "descript", id = "legs", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee }};
 
             string json = JsonEncoder.Encode(l, true);
             Console.WriteLine(json);
+            var lst = JsonDecoder.Decode<List<ItemData>>(json);
 
             //TestJsonParser(@"..\..\..\TestJsonFiles\TestClass.json");
             //TestJsonParser(@"..\..\..\TestJsonFiles\ClassWithClassReference.json");

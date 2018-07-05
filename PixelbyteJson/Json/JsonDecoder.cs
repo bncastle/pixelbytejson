@@ -109,7 +109,8 @@ namespace Pixelbyte.Json
                 for (int i = 0; i < jsonObj.rootArray.Count; i++)
                 {
                     var value = DecodeValue(jsonObj.rootArray[i], arrayElementType);
-                    if (value != null || nullable) newArray.SetValue(value, i);
+                    //if (value != null || nullable) newArray.SetValue(value, i);
+                    newArray.SetValue(value, i);
                 }
                 return newArray;
             });
@@ -122,9 +123,15 @@ namespace Pixelbyte.Json
                 if (jsonObj[JsonEncoder.TypeNameString] != null)
                 {
                     obj = CreateObjectInstance(TypeFromStringMethod(jsonObj[JsonEncoder.TypeNameString].ToString()));
+                    if (obj == null)
+                        throw new JSONDecodeException(string.Format("Unable to create object of type '{0}'!", jsonObj[JsonEncoder.TypeNameString].ToString()));
                 }
                 else
+                {
                     obj = CreateObjectInstance(type);
+                    if (obj == null)
+                        throw new JSONDecodeException(string.Format("Unable to create object of type '{0}'!", type.Name));
+                }
 
                 var objectType = obj.GetType();
 
@@ -226,9 +233,21 @@ namespace Pixelbyte.Json
 
         static object DecodeValue(object value, Type toType)
         {
-            if (value == null || (value.ToString() == "null" && toType != typeof(string))) return null;
+            if ((value == null && (toType.IsClass || toType.IsInterface)) || (value.ToString() == "null" && toType != typeof(string))) return null;
 
-            if (toType == typeof(string))
+            if (value is JsonObject)
+            {
+                var childObj = value as JsonObject;
+
+                if (toType.HasInterface(typeof(IDictionary)))
+                {
+                    var decoder = GetDecoder(typeof(IDictionary));
+                    return decoder(toType, childObj);
+                }
+                else
+                    return Decode(childObj, toType);
+            }
+            else if (toType == typeof(string))
                 value = value.ToString();
             else if (toType == typeof(bool))
                 value = Convert.ToBoolean(value);
@@ -273,19 +292,6 @@ namespace Pixelbyte.Json
                     return dateTime;
                 else
                     throw new Exception("DateTime value incorrect format: " + value.ToString());
-            }
-            //Other classes
-            else if (value is JsonObject)
-            {
-                var childObj = value as JsonObject;
-
-                if (toType.HasInterface(typeof(IDictionary)))
-                {
-                    var decoder = GetDecoder(typeof(IDictionary));
-                    return decoder(toType, childObj);
-                }
-                else
-                    return Decode(childObj, toType);
             }
             //Lists, Dictionaries, Arrays...
             else if (value is List<object>)
