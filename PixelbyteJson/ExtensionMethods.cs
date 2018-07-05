@@ -101,7 +101,7 @@ namespace Pixelbyte.Json
         //    type.EnumerateFields(JsonEncoder.DEFAULT_JSON_BINDING_FLAGS, fieldOperation);
         //}
 
-        public static void EnumerateFields(this Type type, BindingFlags flags, Action<FieldInfo,string> fieldOperation)
+        public static void EnumerateFields(this Type type, BindingFlags flags, Action<FieldInfo, string> fieldOperation)
         {
             //Run through all upstream types of this object to make sure we get all upstream private variables
             //that should be serialized
@@ -124,6 +124,28 @@ namespace Pixelbyte.Json
                 }
                 type = type.BaseType;
             }
+        }
+
+        public static string GetFriendlyName(this Type type)
+        {
+            string friendlyName = type.Name;
+            if (type.IsGenericType)
+            {
+                int iBacktick = friendlyName.IndexOf('`');
+                if (iBacktick > 0)
+                {
+                    friendlyName = friendlyName.Remove(iBacktick);
+                }
+                friendlyName += "<";
+                Type[] typeParameters = type.GetGenericArguments();
+                for (int i = 0; i < typeParameters.Length; ++i)
+                {
+                    string typeParamName = GetFriendlyName(typeParameters[i]);
+                    friendlyName += (i == 0 ? typeParamName : "," + typeParamName);
+                }
+                friendlyName += ">";
+            }
+            return friendlyName;
         }
     }
 }

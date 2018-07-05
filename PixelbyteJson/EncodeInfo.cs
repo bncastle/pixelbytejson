@@ -4,9 +4,8 @@ using System.Collections.Generic;
 namespace Pixelbyte.Json
 {
     /// <summary>
-    /// This class holds data returned by a class that implements
-    /// the IJsonEncodeControl interface. It is then used to encode the
-    /// object into JSON
+    /// This class holds data returned by a class that implements the IJsonEncodeControl interface. 
+    /// It is then used to encode the object into JSON
     /// </summary>
     public class EncodeInfo : IEnumerable
     {

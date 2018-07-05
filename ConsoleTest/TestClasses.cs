@@ -23,7 +23,8 @@ namespace Pixelbyte.Json
         }
 
         static Random rng;
-        public static Bounds Rnd() {
+        public static Bounds Rnd()
+        {
             if (rng == null)
                 rng = new Random();
 
@@ -58,7 +59,7 @@ namespace Pixelbyte.Json
         }
     }
 
-    public enum Ferocity { Docile, Fierce, Afraid}
+    public enum Ferocity { Docile, Fierce, Afraid }
     public struct V3 { public float x, y, z; }
 
     internal class ClassWithClassReference : IJsonDecodeCallbacks
@@ -70,7 +71,7 @@ namespace Pixelbyte.Json
         public bool isMale = false;
         public Animal pet = null;
         public Dictionary<string, int> numbers = new Dictionary<string, int>() { { "fiver", 5 }, { "sixer", 6 }, { "severner", 7 } };
-        public List<string> aList = new List<string>() {"fredro", "norbo", "rendro"};
+        public List<string> aList = new List<string>() { "fredro", "norbo", "rendro" };
         public string[] anArray = new string[] { "fredro", "norbo", "rendro" };
         private string shouldNotBeSeen = "nope";
 
@@ -88,5 +89,54 @@ namespace Pixelbyte.Json
         {
             return string.Format("Name: {0} Age: {1} Temp: {2} Male: {3} Pet: {4}", name, age, temperature, isMale, pet.ToString());
         }
+    }
+
+    [Serializable]
+    public class TestArray
+    {
+        public uint[] theArray;
+    }
+
+    [Serializable]
+    public class TestList
+    {
+        public List<int> stuff;
+    }
+
+    public enum ItemType : ushort
+    { weapon, Meleee }
+
+    [Serializable]
+    public class ItemData
+    {
+        #region Events
+        [field: NonSerialized]
+        public event Action<string> DescriptionChanged;
+        [field: NonSerialized]
+        public event Action<string> TitleChanged;
+        #endregion
+
+        /// <summary>
+        /// The name of the object
+        /// </summary>
+        public string id;
+
+        public string description;
+        public string sprite;
+
+        //Type of item it is
+        public ItemType type;
+
+        //for a ranged or wand
+        public int uses = 0;
+        public int weight = 0;
+
+        //Category in which this item belongs
+        public ItemType Category => (ItemType)((ushort)type & 0xFF00);
+
+        bool inInventory;
+
+        [JsonInclude]
+        bool equipped;
     }
 }

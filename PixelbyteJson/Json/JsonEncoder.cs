@@ -86,7 +86,7 @@ namespace Pixelbyte.Json
             EncodeInfo encodeData = new EncodeInfo();
             control.GetSerializedData(encodeData);
             if (encodeData.Count == 0)
-                throw new Exception(string.Format("Object of Type {0} implements {1} but returned no EncodeInfo data!", control.GetType().Name, typeof(IJsonEncodeControl).Name));
+                throw new Exception(string.Format("Object of Type {0} implements {1} but returned no EncodeInfo data!", control.GetType().GetFriendlyName(), typeof(IJsonEncodeControl).Name));
 
             BeginObject();
             //Include type information
@@ -218,7 +218,12 @@ namespace Pixelbyte.Json
                 if (enumsAsStrings)
                     String(value.ToString());
                 else
-                    Number((int)value);
+                {
+                    //Get the underlying type of the Enum (it can be int, uint, ushort, byte, etc)
+                    var enumType = Enum.GetUnderlyingType(value.GetType());
+                    var convertedType = Convert.ChangeType(value, enumType);
+                    Number(convertedType);
+                }
             }
             else if (value is char) String(value.ToString());
             else if (value.GetType().IsNumeric()) Number(value);
@@ -346,6 +351,7 @@ namespace Pixelbyte.Json
                     builder.EncodePair(jsonName, value);
 
                     //Format for another name value pair
+                    builder.Indent();
                     builder.Comma();
                     builder.LineBreak();
                 });
@@ -359,6 +365,7 @@ namespace Pixelbyte.Json
                 builder.LineBreak();
                 foreach (var item in (IEnumerable)obj)
                 {
+                    builder.Indent();
                     builder.EncodeValue(item);
                     builder.Comma();
                     builder.LineBreak();
@@ -372,6 +379,7 @@ namespace Pixelbyte.Json
                 var table = obj as IDictionary;
                 foreach (var key in table.Keys)
                 {
+                    builder.Indent();
                     builder.EncodePair(key.ToString(), table[key]);
                     builder.Comma();
                     builder.LineBreak();

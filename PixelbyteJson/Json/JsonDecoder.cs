@@ -134,7 +134,14 @@ namespace Pixelbyte.Json
                     var parameter = jsonObj[jsonName];
                     if (jsonObj.KeyExists(jsonName))
                     {
-                        field.SetValue(obj, DecodeValue(parameter, field.FieldType));
+                        try
+                        {
+                            field.SetValue(obj, DecodeValue(parameter, field.FieldType));
+                        }
+                        catch (Exception e)
+                        {
+                            throw new JSONDecodeException("Unable to decode json name '" + jsonName + "' of type '" + field.FieldType.GetFriendlyName() + "'\r\n" + e.Message);
+                        }
                     }
                     //else
                     //{
@@ -221,8 +228,10 @@ namespace Pixelbyte.Json
         {
             if (value == null) return null;
 
-            if (value.GetType() == typeof(bool) || value.GetType() == typeof(string))
-                return value;
+            if (toType == typeof(string))
+                value = value.ToString();
+            else if (toType == typeof(bool))
+                value = Convert.ToBoolean(value);
             //Signed ints
             else if (toType == typeof(Int64))
                 value = Convert.ToInt64(value);

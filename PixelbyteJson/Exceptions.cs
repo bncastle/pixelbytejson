@@ -14,4 +14,14 @@ namespace Pixelbyte.Json
     {
         public JSONParserException(string message) : base(message) { }
     }
+
+    public class JSONEncodeException : Exception
+    {
+        public JSONEncodeException(string message) : base(message) { }
+    }
+
+    public class JSONDecodeException : Exception
+    {
+        public JSONDecodeException(string message) : base(message) { }
+    }
 }

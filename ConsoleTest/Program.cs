@@ -11,6 +11,7 @@ namespace Pixelbyte.Json
     {
         static void Main()
         {
+            const string testList = "[{\"imageName\": null, \"itemName\": \"Chair\", \"description\": \"A Chair\", \"price\": 23}, {\"imageName\": null, \"itemName\": \"Bowling Ball\", \"description\": \"A Bowling ball\", \"price\": 34}]";
             //TestJsonParser();
             //TestDeserialize(); 
 
@@ -33,7 +34,6 @@ namespace Pixelbyte.Json
             JsonEncoder.SetTypeEncoder(typeof(Bounds), (obj, builder) =>
             {
                 var type = obj.GetType();
-
                 var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
                 builder.BeginObject();
@@ -52,14 +52,47 @@ namespace Pixelbyte.Json
                 return new Bounds(Convert.ToSingle(jsonObj["x"]), Convert.ToSingle(jsonObj["y"]), Convert.ToSingle(jsonObj["width"]), Convert.ToSingle(jsonObj["height"]));
             });
 
-            List<Bounds> bb = new List<Bounds>() { Bounds.Rnd(), Bounds.Rnd(), Bounds.Rnd(), Bounds.Rnd() };
-            string boundsJson = JsonEncoder.Encode(bb, true);
-            Console.WriteLine(boundsJson);
-            var decodedBounds = JsonDecoder.Decode<List<Bounds>>(boundsJson);
+            //List<Bounds> bb = new List<Bounds>() { Bounds.Rnd(), Bounds.Rnd(), Bounds.Rnd(), Bounds.Rnd() };
+            //string boundsJson = JsonEncoder.Encode(bb, true);
+            //Console.WriteLine(boundsJson);
+            //var decodedBounds = JsonDecoder.Decode<List<Bounds>>(boundsJson);
 
-            Bounds b = new Bounds(23.5f, 54.0f, 120.0f, 64.1f);
-            string bounds = JsonEncoder.Encode(b);
-            Console.WriteLine(bounds);
+            //var decodedData = JsonDecoder.Decode<List<ItemData>>(testList);
+
+            //Bounds b = new Bounds(23.5f, 54.0f, 120.0f, 64.1f);
+            //string bounds = JsonEncoder.Encode(b);
+            //Console.WriteLine(bounds);
+
+            //TestArray ta = new TestArray()
+            //{
+            //    theArray = new uint[] { 19078, 1934, 2067, 6590 }
+            //};
+
+            //var json = JsonEncoder.Encode(ta);
+            //Console.WriteLine(json);
+
+            //TestArray dec = JsonDecoder.Decode<TestArray>(json);
+            //Console.WriteLine(dec.theArray[0]);
+
+            //TestList tl = new TestList()
+            //{
+            //    stuff = new List<int>() { 67, 89, 3278 }
+            //};
+            //json = JsonEncoder.Encode(tl);
+            //Console.WriteLine(json);
+
+            //TestList decodedList = JsonDecoder.Decode<TestList>(json);
+            //Console.WriteLine(decodedList.stuff[0]);
+
+            var l = new List<ItemData>()
+            {
+                new ItemData() { description = "descript", id = "itemData", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee },
+                new ItemData() { description = "descript", id = "itemData", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee },
+                new ItemData() { description = "descript", id = "itemData", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee },
+                new ItemData() { description = "descript", id = "itemData", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee }};
+
+            string json = JsonEncoder.Encode(l, true);
+            Console.WriteLine(json);
 
             //TestJsonParser(@"..\..\..\TestJsonFiles\TestClass.json");
             //TestJsonParser(@"..\..\..\TestJsonFiles\ClassWithClassReference.json");

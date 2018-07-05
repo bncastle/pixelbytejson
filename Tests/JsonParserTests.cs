@@ -47,5 +47,10 @@ namespace Tests
             Console.WriteLine(parser.Tokenizer.AllErrors);
             Console.WriteLine(parser.AllErrors);
         }
+
+        //[Test]
+        //public void ClassWithArray()
+        //{
+        //}
     }
 }
