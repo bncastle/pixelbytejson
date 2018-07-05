@@ -226,7 +226,7 @@ namespace Pixelbyte.Json
 
         static object DecodeValue(object value, Type toType)
         {
-            if (value == null || value.ToString() == "null") return null;
+            if (value == null || (value.ToString() == "null" && toType != typeof(string))) return null;
 
             if (toType == typeof(string))
                 value = value.ToString();
