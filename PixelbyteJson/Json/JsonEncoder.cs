@@ -345,9 +345,9 @@ namespace Pixelbyte.Json
 
                 builder.WriteTypeInfoIfAttributePresent(type);
 
-                type.EnumerateFields(DEFAULT_JSON_BINDING_FLAGS, (field, jsonName) =>
+                obj.EnumerateFields(DEFAULT_JSON_BINDING_FLAGS, (targetObj, field, jsonName) =>
                 {
-                    var value = field.GetValue(obj);
+                    var value = field.GetValue(targetObj);
                     builder.EncodePair(jsonName, value);
 
                     //Format for another name value pair

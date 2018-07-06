@@ -101,28 +101,45 @@ namespace Pixelbyte.Json
             return tok;
         }
 
+        /// <summary>
+        /// If the next token is of the expected type, the token is consumed
+        /// </summary>
+        /// <param name="expectedType"></param>
+        /// <returns>true if the next token is of the expected type, false otherwise</returns>
+        bool ExpectNext(TokenType expectedType)
+        {
+            if (PeekToken != null && PeekToken.Kind == expectedType)
+            {
+                NextToken();
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Checks that the type of the next token is as specified
+        /// If it is it returns true and does NOT advance the token
+        /// </summary>
+        /// <param name="expectedType"></param>
+        /// <returns></returns>
+        bool IsNext(TokenType expectedType) => (PeekToken != null && PeekToken.Kind == expectedType);
+
         JsonPair ParsePair()
         {
-            if (PeekToken == null || PeekToken.Kind != TokenType.String)
+            if (!IsNext(TokenType.String))
             {
                 LogError("Expected a string", PeekToken, false);
                 return null;
             }
+
             var pairName = NextToken().Lexeme;
 
-            if (PeekToken == null)
+            //Expect the : separator ExpectNext() eats the token if it is found
+            if (!ExpectNext(TokenType.Colon))
             {
                 LogError("Expected a ':'", PreviousToken(), false);
                 return null;
             }
-            else if (PeekToken.Kind != TokenType.Colon)
-            {
-                LogError("Expected a ':'", PeekToken, false);
-                return null;
-            }
-
-            //Eat the :
-            NextToken();
 
             if (PeekToken == null)
             {
@@ -135,11 +152,11 @@ namespace Pixelbyte.Json
                 var token = NextToken();
                 return new JsonPair(pairName, token.Literal);
             }
-            else if (PeekToken.Kind == TokenType.OpenCurly)
+            else if (IsNext(TokenType.OpenCurly))
             {
                 return new JsonPair(pairName, ParseObject());
             }
-            else if (PeekToken.Kind == TokenType.OpenBracket)
+            else if (IsNext(TokenType.OpenBracket))
             {
                 return new JsonPair(pairName, ParseArray());
             }
@@ -161,7 +178,7 @@ namespace Pixelbyte.Json
             while (PeekToken != null)
             {
                 //It could be an empty object
-                if (PeekToken.Kind == TokenType.CloseCurly) break;
+                if (IsNext(TokenType.CloseCurly)) break;
 
                 var pair = ParsePair();
                 if (pair == null) break;
@@ -171,9 +188,9 @@ namespace Pixelbyte.Json
                         throw new JSONParserException(string.Format("[{0}:{1}] Duplicate key found: {2}", PreviousToken().Line, PreviousToken().Column, pair.name));
                 }
 
-                if (PeekToken == null || PeekToken.Kind == TokenType.CloseCurly) break;
+                if (PeekToken == null || IsNext(TokenType.CloseCurly)) break;
 
-                else if (PeekToken.Kind != TokenType.Comma)
+                else if (!IsNext(TokenType.Comma))
                     LogError("Expected a ,", PeekToken, false);
 
                 NextToken();
@@ -202,36 +219,31 @@ namespace Pixelbyte.Json
                 {
                     array.Add(NextToken().Lexeme);
                 }
-                else if (PeekToken.Kind == TokenType.OpenBracket)
+                else if (IsNext(TokenType.OpenBracket))
                 {
                     array.Add(ParseArray());
                 }
-                else if (PeekToken.Kind == TokenType.OpenCurly)
+                else if (IsNext(TokenType.OpenCurly))
                 {
                     array.Add(ParseObject());
                 }
-                else if (PeekToken.Kind == TokenType.Colon)
+                else if (IsNext(TokenType.Colon))
                 {
                     LogError("Unexpected ':'", PeekToken, false);
                 }
 
-                if (PeekToken == null || PeekToken.Kind == TokenType.CloseBracket) break;
+                if (PeekToken == null || IsNext(TokenType.CloseBracket)) break;
 
                 //No closing bracket? then expect a comma
-                else if (PeekToken.Kind != TokenType.Comma)
+                else if (!ExpectNext(TokenType.Comma))
                     LogError("Expected a ,", PeekToken, false);
-
-                NextToken();
             }
 
-            if (PeekToken == null)
+            if(!ExpectNext(TokenType.CloseBracket))
             {
                 LogError("Expected ']'");
                 return null;
             }
-            else
-                //Eat the closing ']'
-                NextToken();
             return array;
         }
 
@@ -239,9 +251,9 @@ namespace Pixelbyte.Json
         {
             if (PeekToken == null)
                 LogError("No valid JSON tokens found!");
-            else if (PeekToken.Kind == TokenType.OpenCurly)
+            else if (IsNext(TokenType.OpenCurly))
                 rootObject = ParseObject();
-            else if (PeekToken.Kind == TokenType.OpenBracket)
+            else if (IsNext(TokenType.OpenBracket))
             {
                 var rootArray = ParseArray();
                 rootObject = new JsonObject(rootArray);

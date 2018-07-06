@@ -101,8 +101,11 @@ namespace Pixelbyte.Json
         //    type.EnumerateFields(JsonEncoder.DEFAULT_JSON_BINDING_FLAGS, fieldOperation);
         //}
 
-        public static void EnumerateFields(this Type type, BindingFlags flags, Action<FieldInfo, string> fieldOperation)
+        public static void EnumerateFields(this object targetObj, BindingFlags flags, Action<object, FieldInfo, string> fieldOperation)
         {
+            if (targetObj == null) return;
+
+            var type = targetObj.GetType();
             //Run through all upstream types of this object to make sure we get all upstream private variables
             //that should be serialized
             while (type != null)
@@ -120,7 +123,7 @@ namespace Pixelbyte.Json
                     var jsonName = (nameAttribute != null) ? nameAttribute.Name : field.Name;
 
                     //Operate on the field
-                    fieldOperation(field, jsonName);
+                    fieldOperation(targetObj, field, jsonName);
                 }
                 type = type.BaseType;
             }

@@ -84,17 +84,6 @@ namespace Pixelbyte.Json
             //TestList decodedList = JsonDecoder.Decode<TestList>(json);
             //Console.WriteLine(decodedList.stuff[0]);
 
-            var l = new List<ItemData>()
-            {
-                new ItemData() { description = "descript", id = "cuffs", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee },
-                null,
-                new ItemData() { description = "descript", id = "fists", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee },
-                new ItemData() { description = "descript", id = "legs", sprite = "theIcon", uses = 100, weight = 24, type = ItemType.Meleee }};
-
-            string json = JsonEncoder.Encode(l, true);
-            Console.WriteLine(json);
-            var lst = JsonDecoder.Decode<List<ItemData>>(json);
-
             //TestJsonParser(@"..\..\..\TestJsonFiles\TestClass.json");
             //TestJsonParser(@"..\..\..\TestJsonFiles\ClassWithClassReference.json");
             //TestJsonParser(@"..\..\..\TestJsonFiles\random.json");

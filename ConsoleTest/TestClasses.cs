@@ -106,37 +106,4 @@ namespace Pixelbyte.Json
     public enum ItemType : ushort
     { weapon, Meleee }
 
-    [Serializable]
-    public class ItemData
-    {
-        #region Events
-        [field: NonSerialized]
-        public event Action<string> DescriptionChanged;
-        [field: NonSerialized]
-        public event Action<string> TitleChanged;
-        #endregion
-
-        /// <summary>
-        /// The name of the object
-        /// </summary>
-        public string id;
-
-        public string description;
-        public string sprite;
-
-        //Type of item it is
-        public ItemType type;
-
-        //for a ranged or wand
-        public int uses = 0;
-        public int weight = 0;
-
-        //Category in which this item belongs
-        public ItemType Category => (ItemType)((ushort)type & 0xFF00);
-
-        bool inInventory;
-
-        [JsonInclude]
-        bool equipped;
-    }
 }

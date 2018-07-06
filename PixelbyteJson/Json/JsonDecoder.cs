@@ -103,7 +103,7 @@ namespace Pixelbyte.Json
                 if (!jsonObj.IsArray) throw new ArgumentException("jsonObj: Expected a rootArray!");
 
                 Type arrayElementType = type.GetElementType();
-                bool nullable = arrayElementType.IsNullable();
+                //bool nullable = arrayElementType.IsNullable();
                 var newArray = Array.CreateInstance(arrayElementType, jsonObj.rootArray.Count);
 
                 for (int i = 0; i < jsonObj.rootArray.Count; i++)
@@ -130,12 +130,11 @@ namespace Pixelbyte.Json
                 {
                     obj = CreateObjectInstance(type);
                     if (obj == null)
-                        throw new JSONDecodeException(string.Format("Unable to create object of type '{0}'!", type.Name));
+                        throw new JSONDecodeException($"Unable to create object of type '{type.Name}'!");
                 }
 
-                var objectType = obj.GetType();
 
-                objectType.EnumerateFields(JsonEncoder.DEFAULT_JSON_BINDING_FLAGS, (field, jsonName) =>
+                obj.EnumerateFields(JsonEncoder.DEFAULT_JSON_BINDING_FLAGS, (targetObj, field, jsonName) =>
                 {
                     //Look for the field name in the json object's data
                     var parameter = jsonObj[jsonName];
@@ -143,11 +142,11 @@ namespace Pixelbyte.Json
                     {
                         try
                         {
-                            field.SetValue(obj, DecodeValue(parameter, field.FieldType));
+                            field.SetValue(targetObj, DecodeValue(parameter, field.FieldType));
                         }
                         catch (Exception e)
                         {
-                            throw new JSONDecodeException("Unable to decode json name '" + jsonName + "' of type '" + field.FieldType.GetFriendlyName() + "'\r\n" + e.Message);
+                            throw new JSONDecodeException($"Unable to decode json name '{jsonName}' of type '{field.FieldType.GetFriendlyName()}'\r\n{e.Message}");
                         }
                     }
                     //else
@@ -233,7 +232,9 @@ namespace Pixelbyte.Json
 
         static object DecodeValue(object value, Type toType)
         {
-            if ((value == null && (toType.IsClass || toType.IsInterface)) || (value.ToString() == "null" && toType != typeof(string))) return null;
+            if ((value == null && (toType.IsClass || toType.IsInterface)) ||
+                (value.ToString() == "null" && toType != typeof(string)))
+                return null;
 
             if (value is JsonObject)
             {
