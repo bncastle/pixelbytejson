@@ -4,7 +4,7 @@ namespace Pixelbyte.Json
 {
     ///If present on a public field, then it is NOT serialized
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class JsonExcludeAttribute : Attribute { }
+    public class JsonIgnoreAttribute: Attribute { }
 
     /// <summary>
     /// If present on a protected or private field, then it is serialized. Otherwise, it isn't

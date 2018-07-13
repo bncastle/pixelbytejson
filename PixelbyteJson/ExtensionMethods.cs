@@ -93,7 +93,7 @@ namespace Pixelbyte.Json
                 foreach (var field in fieldInfos)
                 {
                     if (((field.IsPrivate || field.IsFamily) && field.GetCustomAttribute<JsonPropertyAttribute>() == null)
-                        || field.GetCustomAttribute<JsonExcludeAttribute>() != null)
+                        || field.GetCustomAttribute<JsonIgnoreAttributeAttribute>() != null)
                         continue;
 
                     //See if the field has a JsonName attribute
