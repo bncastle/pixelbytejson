@@ -336,7 +336,7 @@ namespace Pixelbyte.Json
             //a JsonTypeHint attribute, then write the type out
             if (!type.IsClass || type.GetCustomAttribute<JsonTypeHintAttribute>(true) == null) return;
 
-            EncodePair("@type", type.FullName);
+            EncodePair(TypeNameString, type.FullName);
             Comma();
             LineBreak();
         }
