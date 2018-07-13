@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace Pixelbyte.Json
 {
-    public static class ExtensionMethods
+    internal static class ExtensionMethods
     {
         internal static bool Contains(this char[] array, char c)
         {
@@ -79,7 +79,7 @@ namespace Pixelbyte.Json
             }
         }
 
-        public static void EnumerateFields(this object targetObj, BindingFlags flags, Action<object, FieldInfo, string> fieldOperation)
+        internal static void EnumerateFields(this object targetObj, BindingFlags flags, Action<object, FieldInfo, string> fieldOperation)
         {
             if (targetObj == null) return;
 
@@ -107,31 +107,12 @@ namespace Pixelbyte.Json
             }
         }
 
-        /// <summary>
-        /// Gets the first method info that matches the given methodName and returns it. Searches down the inheritance hierarchy
-        /// </summary>
-        /// <param name=""></param>
-        /// <param name="methodName"></param>
-        /// <returns></returns>
-        public static MethodInfo FindMethod(this Type t, string methodName, BindingFlags flags)
-        {
-            MethodInfo method = null;
-            while (t != null)
-            {
-                method = t.GetMethod(methodName, flags);
-                if (method != null)
-                    return method;
-                t = t.BaseType;
-            }
-            return method;
-        }
-
-        public static MethodInfo FindMethodWith<T>(this Type t, BindingFlags flags) where T : Attribute
+        internal static MethodInfo FindMethodWith<T>(this Type t, BindingFlags flags) where T : Attribute
         {
             while (t != null)
             {
                 var methods = t.GetMethods(flags);
-                if(methods != null)
+                if (methods != null)
                 {
                     for (int i = 0; i < methods.Length; i++)
                     {
@@ -144,7 +125,7 @@ namespace Pixelbyte.Json
             return null;
         }
 
-        public static string FriendlyName(this Type type)
+        internal static string FriendlyName(this Type type)
         {
             string friendlyName = type.Name;
             if (type.IsGenericType)
