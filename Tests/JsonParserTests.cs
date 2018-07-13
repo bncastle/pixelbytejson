@@ -77,8 +77,11 @@ namespace Tests
             this.age = age;
         }
 
-        void OnJsonEncoded() => EncodedMethodCalled = true;
+        [JsonPreEncode]
         void OnJsonPreEncode() => PreEncodedMethodCalled = true;
+        [JsonEncoded]
+        void OnJsonEncoded() => EncodedMethodCalled = true;
+        [JsonDecoded]
         void OnJsonDecoded() => DecodedMethodCalled = true;
     }
 }

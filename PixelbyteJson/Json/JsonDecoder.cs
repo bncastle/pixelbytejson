@@ -8,9 +8,6 @@ namespace Pixelbyte.Json
     // Define other methods and classes here
     public static class JsonDecoder
     {
-        //To be notified when decoding has finished, add a void method of this name to the class
-        const string JSON_DECODED_CALLBACK = "OnJsonDecoded";
-
         //Signature for all Decode methods
         public delegate object DecodeMethod(Type targetType, JsonObject jsonObj);
 
@@ -225,9 +222,9 @@ namespace Pixelbyte.Json
             //See if this object implements the Deserialization callback interface
             var decodedObject = decoder(type, jsonObj);
 
-            var deserializedCallback = type.FindMethod(JSON_DECODED_CALLBACK, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            var decodedCallback = type.FindMethodWith<JsonDecodedAttribute>(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 
-            deserializedCallback?.Invoke(decodedObject, null);
+            decodedCallback?.Invoke(decodedObject, null);
 
             return decodedObject;
         }

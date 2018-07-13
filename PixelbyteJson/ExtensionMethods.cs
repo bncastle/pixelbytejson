@@ -126,6 +126,24 @@ namespace Pixelbyte.Json
             return method;
         }
 
+        public static MethodInfo FindMethodWith<T>(this Type t, BindingFlags flags) where T : Attribute
+        {
+            while (t != null)
+            {
+                var methods = t.GetMethods(flags);
+                if(methods != null)
+                {
+                    for (int i = 0; i < methods.Length; i++)
+                    {
+                        if (methods[i].GetCustomAttribute<T>() != null)
+                            return methods[i];
+                    }
+                }
+                t = t.BaseType;
+            }
+            return null;
+        }
+
         public static string FriendlyName(this Type type)
         {
             string friendlyName = type.Name;

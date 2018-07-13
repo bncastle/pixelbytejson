@@ -11,11 +11,6 @@ namespace Pixelbyte.Json
     /// </summary>
     public class JsonEncoder
     {
-        //To be notified before encoding begins, add a void method of this name to the class
-        const string JSON_PRE_ENCODE_CALLBACK = "OnJsonPreEncode";
-        //To be notified when encoding has finished, add a void method of this name to the class
-        const string JSON_ENCODED_CALLBACK = "OnJsonEncoded";
-
         public const BindingFlags DEFAULT_JSON_BINDING_FLAGS = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
 
         //The presence of this string as a key in a Json object indicates the 
@@ -115,12 +110,12 @@ namespace Pixelbyte.Json
             Type type = obj.GetType();
 
             //See if the object implements the Serialization callbacks interface
-            var preSerializeCallback = type.FindMethod(JSON_PRE_ENCODE_CALLBACK, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            var serializedCallback = type.FindMethod(JSON_ENCODED_CALLBACK, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            var preEncodeCallback = type.FindMethodWith<JsonPreEncodeAttribute>(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            var encodedCallback = type.FindMethodWith<JsonEncodedAttribute>( BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 
             var serializationControl = obj as IJsonEncodeControl;
 
-            preSerializeCallback?.Invoke(obj, null);
+            preEncodeCallback?.Invoke(obj, null);
 
             //If the object implements serialization control, then use it instead
             if (serializationControl != null)
@@ -133,7 +128,7 @@ namespace Pixelbyte.Json
                 encodeMethod(obj, this);
             }
 
-            serializedCallback?.Invoke(obj, null);
+            encodedCallback?.Invoke(obj, null);
             return ToString();
         }
         #endregion
