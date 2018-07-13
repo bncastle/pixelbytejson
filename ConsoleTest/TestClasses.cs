@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 namespace Pixelbyte.Json
-{
+{ 
     internal class Bounds
     {
         private float x;
@@ -60,9 +60,10 @@ namespace Pixelbyte.Json
     }
 
     public enum Ferocity { Docile, Fierce, Afraid }
+
     public struct V3 { public float x, y, z; }
 
-    internal class ClassWithClassReference : IJsonDecodeCallbacks
+    internal class ClassWithClassReference
     {
         public string name = string.Empty;
         public int age = 0;
@@ -75,10 +76,10 @@ namespace Pixelbyte.Json
         public string[] anArray = new string[] { "fredro", "norbo", "rendro" };
         private string shouldNotBeSeen = "nope";
 
-        [JsonInclude]
+        [JsonPropertyAttribute]
         private string doThisOne = "It is done!";
 
-        public void OnJsonDecoded()
+        void OnJsonDecoded()
         {
             System.Console.WriteLine("Decoded a ClassWithClassReference");
             Console.WriteLine(shouldNotBeSeen);
@@ -103,7 +104,6 @@ namespace Pixelbyte.Json
         public List<int> stuff;
     }
 
-    public enum ItemType : ushort
-    { weapon, Meleee }
+    public enum ItemType : ushort { weapon, Meleee }
 
 }

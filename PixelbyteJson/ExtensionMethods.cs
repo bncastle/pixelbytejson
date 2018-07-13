@@ -79,28 +79,6 @@ namespace Pixelbyte.Json
             }
         }
 
-        public static bool HasAttribute<T>(this FieldInfo fi) where T : Attribute
-        {
-            return fi.GetCustomAttributes(typeof(T), false).Length > 0;
-        }
-
-        public static bool HasAttribute<T>(this Type type, bool inherit) where T : Attribute
-        {
-            return type.GetCustomAttributes(typeof(T), inherit).Length > 0;
-        }
-
-        public static T GetFirstAttribute<T>(this FieldInfo fi) where T : Attribute
-        {
-            var attrs = fi.GetCustomAttributes(typeof(T), false);
-            if (attrs.Length == 0) return null;
-            else return attrs[0] as T;
-        }
-
-        //public static void EnumerateFields(this Type type, Action<FieldInfo,string> fieldOperation)
-        //{
-        //    type.EnumerateFields(JsonEncoder.DEFAULT_JSON_BINDING_FLAGS, fieldOperation);
-        //}
-
         public static void EnumerateFields(this object targetObj, BindingFlags flags, Action<object, FieldInfo, string> fieldOperation)
         {
             if (targetObj == null) return;
@@ -114,13 +92,13 @@ namespace Pixelbyte.Json
 
                 foreach (var field in fieldInfos)
                 {
-                    if (((field.IsPrivate || field.IsFamily) && !field.HasAttribute<JsonIncludeAttribute>())
-                        || field.HasAttribute<JsonExcludeAttribute>())
+                    if (((field.IsPrivate || field.IsFamily) && field.GetCustomAttribute<JsonPropertyAttribute>() == null)
+                        || field.GetCustomAttribute<JsonExcludeAttribute>() != null)
                         continue;
 
                     //See if the field has a JsonName attribute
-                    var nameAttribute = field.GetFirstAttribute<JsonName>();
-                    var jsonName = (nameAttribute != null) ? nameAttribute.Name : field.Name;
+                    var nameAttribute = field.GetCustomAttribute<JsonPropertyAttribute>();
+                    var jsonName = (nameAttribute != null && nameAttribute.Name != null) ? nameAttribute.Name : field.Name;
 
                     //Operate on the field
                     fieldOperation(targetObj, field, jsonName);
@@ -129,7 +107,26 @@ namespace Pixelbyte.Json
             }
         }
 
-        public static string GetFriendlyName(this Type type)
+        /// <summary>
+        /// Gets the first method info that matches the given methodName and returns it. Searches down the inheritance hierarchy
+        /// </summary>
+        /// <param name=""></param>
+        /// <param name="methodName"></param>
+        /// <returns></returns>
+        public static MethodInfo FindMethod(this Type t, string methodName, BindingFlags flags)
+        {
+            MethodInfo method = null;
+            while (t != null)
+            {
+                method = t.GetMethod(methodName, flags);
+                if (method != null)
+                    return method;
+                t = t.BaseType;
+            }
+            return method;
+        }
+
+        public static string FriendlyName(this Type type)
         {
             string friendlyName = type.Name;
             if (type.IsGenericType)
@@ -143,7 +140,7 @@ namespace Pixelbyte.Json
                 Type[] typeParameters = type.GetGenericArguments();
                 for (int i = 0; i < typeParameters.Length; ++i)
                 {
-                    string typeParamName = GetFriendlyName(typeParameters[i]);
+                    string typeParamName = FriendlyName(typeParameters[i]);
                     friendlyName += (i == 0 ? typeParamName : "," + typeParamName);
                 }
                 friendlyName += ">";

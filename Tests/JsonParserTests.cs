@@ -14,13 +14,13 @@ namespace Tests
         [Test]
         public void JSONParserNullException()
         {
-            Assert.Throws<ArgumentNullException>( () => JsonParser.Parse(String.Empty) );
+            Assert.Throws<ArgumentNullException>(() => JsonParser.Parse(String.Empty));
         }
 
         [Test]
         public void JSONParserNonExistentFile()
         {
-            Assert.Throws<FileNotFoundException>( () => JsonParser.ParseFile("nonexistentfile.json"));
+            Assert.Throws<FileNotFoundException>(() => JsonParser.ParseFile("nonexistentfile.json"));
         }
 
         [Test]
@@ -48,9 +48,37 @@ namespace Tests
             Console.WriteLine(parser.AllErrors);
         }
 
-        //[Test]
-        //public void ClassWithArray()
-        //{
-        //}
+        [Test]
+        public void EncodeDecodeCallbacks()
+        {
+            TestCallbacks tc = new TestCallbacks("Black", 23);
+            string json = JsonEncoder.Encode(tc);
+            Assert.IsTrue(tc.PreEncodedMethodCalled);
+            Assert.IsTrue(tc.EncodedMethodCalled);
+
+            var decoded = JsonDecoder.Decode<TestCallbacks>(json);
+            Assert.IsTrue(decoded.DecodedMethodCalled);
+        }
+    }
+    class TestCallbacks
+    {
+        string name;
+        int age;
+
+        public bool EncodedMethodCalled { get; private set; }
+        public bool PreEncodedMethodCalled { get; private set; }
+        public bool DecodedMethodCalled { get; private set; }
+
+        public TestCallbacks() { }
+
+        public TestCallbacks(string name, int age)
+        {
+            this.name = name;
+            this.age = age;
+        }
+
+        void OnJsonEncoded() => EncodedMethodCalled = true;
+        void OnJsonPreEncode() => PreEncodedMethodCalled = true;
+        void OnJsonDecoded() => DecodedMethodCalled = true;
     }
 }
