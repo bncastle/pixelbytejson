@@ -59,6 +59,7 @@
     <Compile Include="Json\Tokenizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Json\Token.cs" />
+    <Compile Include="TypeComparer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

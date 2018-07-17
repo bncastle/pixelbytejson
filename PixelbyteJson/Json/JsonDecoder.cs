@@ -13,6 +13,7 @@ namespace Pixelbyte.Json
 
         static Dictionary<Type, DecodeMethod> decoders;
         static DecodeMethod defaultDecoder;
+        static TypeComparer typeComparer;
 
         /// <summary>
         /// This method gets the given type from a string
@@ -53,7 +54,8 @@ namespace Pixelbyte.Json
 
         static JsonDecoder()
         {
-            decoders = new Dictionary<Type, DecodeMethod>();
+            typeComparer = new TypeComparer();
+            decoders = new Dictionary<Type, DecodeMethod>(typeComparer);
 
             //Set these to their defaults
             CreateInstanceMethod = null;

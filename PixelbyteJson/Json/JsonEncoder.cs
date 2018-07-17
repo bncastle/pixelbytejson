@@ -23,6 +23,7 @@ namespace Pixelbyte.Json
         public delegate void EncodeMethod(object obj, JsonEncoder encoder);
 
         //Contains all supported JSON encoders
+        static TypeComparer typeComparer;
         static Dictionary<Type, EncodeMethod> typeEncoders;
         static EncodeMethod defaultTypeEncoder;
 
@@ -39,7 +40,12 @@ namespace Pixelbyte.Json
         bool startOfLine = true;
         int indentLevel;
 
-        static JsonEncoder() { typeEncoders = new Dictionary<Type, EncodeMethod>(); AddDefaults(); }
+        static JsonEncoder()
+        {
+            typeComparer = new TypeComparer();
+            typeEncoders = new Dictionary<Type, EncodeMethod>(typeComparer);
+            AddDefaults();
+        }
 
         #region Static Encoder Methods
         public static void SetTypeEncoder(Type type, EncodeMethod encodeFunc) { typeEncoders[type] = encodeFunc; }
