@@ -12,9 +12,9 @@ namespace Tests
     public class JsonParserTests
     {
         [Test]
-        public void JSONParserNullException()
+        public void JSONParserEmptyException()
         {
-            Assert.Throws<ArgumentNullException>(() => JsonParser.Parse(String.Empty));
+            Assert.Throws<ArgumentException>(() => JsonParser.Parse(String.Empty));
         }
 
         [Test]
@@ -26,26 +26,21 @@ namespace Tests
         [Test]
         public void NonJSONData()
         {
-            var parser = JsonParser.Parse("hfjdsgkds");
-            Assert.IsFalse(parser.Tokenizer.Successful);
-            Assert.IsFalse(parser.Successful);
+            Assert.Throws<JSONParserException>(() => JsonParser.Parse("hfjdsgkds"));
         }
 
         [Test]
         public void EmptyObject()
         {
             var parser = JsonParser.Parse("{}");
-            Assert.IsTrue(parser.Tokenizer.Successful);
-            Assert.IsTrue(parser.Successful);
+            //Assert.IsTrue(parser.Tokenizer.Successful);
+            //Assert.IsTrue(parser.Successful);
         }
 
         [Test]
         public void BadNumber()
         {
-            var parser = JsonParser.Parse(@"{""Number"" : 908,82f}");
-            Assert.IsFalse(parser.Tokenizer.Successful);
-            Console.WriteLine(parser.Tokenizer.AllErrors);
-            Console.WriteLine(parser.AllErrors);
+            Assert.Throws<JSONParserException>( () => JsonParser.Parse(@"{""Number"" : 908,82f}"));
         }
 
         [Test]

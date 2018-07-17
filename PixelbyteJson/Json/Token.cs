@@ -2,7 +2,7 @@
 {
     public class Token
     {
-        public TokenType Kind { get; private set; }
+        public JsonToken Kind { get; private set; }
         public string Lexeme { get; private set; }
         /// <summary>
         /// Some lexemes have a literal value. This holds those
@@ -11,7 +11,7 @@
         public int Line { get; private set; }
         public int Column { get; private set; }
 
-        public Token(TokenType type, int line, int column, string lexeme = null, object literal = null)
+        public Token(JsonToken type, int line, int column, string lexeme = null, object literal = null)
         {
             Kind = type;
             Column = column;

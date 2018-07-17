@@ -12,6 +12,11 @@ namespace Pixelbyte.Json
         static void Main()
         {
             const string testList = "[{\"imageName\": null, \"itemName\": \"Chair\", \"description\": \"A Chair\", \"price\": 23}, {\"imageName\": null, \"itemName\": \"Bowling Ball\", \"description\": \"A Bowling ball\", \"price\": 34}]";
+
+            //JsonParser.Parse(@"{""fixodent"" : true , ""matriark"" : 23.45 }");
+
+            JsonParser.Parse(@"{""Number"" : 908,82f}");
+
             //TestJsonParser();
             //TestDeserialize(); 
 
@@ -118,29 +123,7 @@ namespace Pixelbyte.Json
         {
             Console.WriteLine("Parsing {0}", filename);
 
-            var jparser = JsonParser.ParseFile(filename);
-
-            //Show any Tokenizer errors
-            if (!jparser.Tokenizer.Successful)
-            {
-                Console.WriteLine("====Tokenizer Errors====");
-                foreach (var err in jparser.Tokenizer.Errors)
-                {
-                    Console.WriteLine(err);
-                }
-            }
-            else if (!jparser.Successful)
-            {
-                Console.WriteLine("====Parser Errors====");
-                foreach (var err in jparser.Errors)
-                {
-                    Console.WriteLine(err);
-                }
-            }
-            else
-            {
-                Console.WriteLine("Success");
-            }
+            var rootObject = JsonParser.ParseFile(filename);
         }
     }
 }

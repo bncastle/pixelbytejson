@@ -145,9 +145,17 @@ namespace Pixelbyte.Json
                         {
                             field.SetValue(targetObj, DecodeValue(parameter, field.FieldType));
                         }
+                        catch (FieldAccessException fae)
+                        {
+                            throw new JSONDecodeException($"Unable to access field {field.Name} of type {field.FieldType.FriendlyName()}", fae);
+                        }
+                        catch (TargetException te)
+                        {
+                            throw new JSONDecodeException($"The target object is null for the field {field.Name}!", te);
+                        }
                         catch (Exception e)
                         {
-                            throw new JSONDecodeException($"Unable to decode json name '{jsonName}' of type '{field.FieldType.FriendlyName()}'\r\n{e.Message}");
+                            throw new JSONDecodeException($"Unable to decode json name '{jsonName}' of type '{field.FieldType.FriendlyName()}'", e);
                         }
                     }
                     //else
@@ -190,27 +198,9 @@ namespace Pixelbyte.Json
 
         public static T Decode<T>(string json)
         {
-            var parser = JsonParser.Parse(json);
-            if (!parser.Tokenizer.Successful)
-            {
-                //TODO: Make custom exception to show all tokenizer errors
-                throw new JSONTokenizerException(parser.Tokenizer.AllErrors);
-            }
-            else if (!parser.Successful)
-            {
-                //TODO: Make custom exception to show all parser errors
-                throw new JSONParserException(parser.AllErrors);
-            }
-            else if (parser.rootObject == null)
-            {
-                //TODO: Make custom exception
-                throw new JSONParserException("JSON ionput did not contain an object!");
-            }
-            else
-            {
-                //Ok then, try to Deserialize
-                return (T)Decode(parser.rootObject, typeof(T));
-            }
+            var rootObject = JsonParser.Parse(json);
+            //Ok then, try to Deserialize
+            return (T)Decode(rootObject, typeof(T));
         }
 
         static object Decode(JsonObject jsonObj, Type type)
