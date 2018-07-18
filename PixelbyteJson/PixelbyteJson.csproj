@@ -47,7 +47,10 @@
     <Compile Include="EncodeInfo.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Interfaces\IJsonDecoded.cs" />
     <Compile Include="Interfaces\IJsonEncodeControl.cs" />
+    <Compile Include="Interfaces\IJsonEncoded.cs" />
+    <Compile Include="Interfaces\IJsonPreEncode.cs" />
     <Compile Include="JsonAttributes.cs" />
     <Compile Include="Json\JsonDecoder.cs" />
     <Compile Include="Json\JsonEncoder.cs" />

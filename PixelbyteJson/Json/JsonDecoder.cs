@@ -213,11 +213,8 @@ namespace Pixelbyte.Json
 
             //See if this object implements the Deserialization callback interface
             var decodedObject = decoder(type, jsonObj);
-
-            var decodedCallback = type.FindMethodWith<JsonDecodedAttribute>(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-
-            decodedCallback?.Invoke(decodedObject, null);
-
+            var callback = decodedObject as IJsonDecoded;
+            callback?.OnJsonDecoded();
             return decodedObject;
         }
 

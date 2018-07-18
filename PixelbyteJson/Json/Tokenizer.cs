@@ -205,6 +205,9 @@ namespace Pixelbyte.Json
             long value = 0;
             int sign = 1;
 
+            ///TODO: Need to support full number format with eE +-
+            ///https://www.json.org/
+
             if (bytes[index] == '-')
             {
                 offset++;

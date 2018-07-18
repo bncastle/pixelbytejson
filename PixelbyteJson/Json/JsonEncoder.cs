@@ -115,13 +115,12 @@ namespace Pixelbyte.Json
 
             Type type = obj.GetType();
 
-            //See if the object implements the Serialization callbacks interface
-            var preEncodeCallback = type.FindMethodWith<JsonPreEncodeAttribute>(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            var encodedCallback = type.FindMethodWith<JsonEncodedAttribute>( BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-
+            //See if the object implements any of the Serialization callback interfaces
             var serializationControl = obj as IJsonEncodeControl;
+            var preEncodeCallback = obj as IJsonPreEncode;
+            var encodedCallback = obj as IJsonEncoded;
 
-            preEncodeCallback?.Invoke(obj, null);
+            preEncodeCallback?.OnJsonPreEncode();
 
             //If the object implements serialization control, then use it instead
             if (serializationControl != null)
@@ -134,7 +133,7 @@ namespace Pixelbyte.Json
                 encodeMethod(obj, this);
             }
 
-            encodedCallback?.Invoke(obj, null);
+            encodedCallback?.OnJsonEncoded();
             return ToString();
         }
         #endregion

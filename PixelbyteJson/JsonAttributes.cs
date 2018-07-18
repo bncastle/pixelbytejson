@@ -26,30 +26,4 @@ namespace Pixelbyte.Json
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public class JsonTypeHintAttribute : Attribute { }
-
-    /// <summary>
-    /// Add to a method to get a callback before a class is encoded to a JSON object
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method)]
-    public class JsonPreEncodeAttribute : Attribute { }
-    /// <summary>
-    /// Add to a method to get a callback after a class is encoded to a JSON object
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method)]
-    public class JsonEncodedAttribute : Attribute { }
-    /// <summary>
-    /// Add to a method to get a callback after a class is decoded to a JSON object
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method)]
-    public class JsonDecodedAttribute : Attribute { }
-
-    ///If present on a float, double, or decimal field then it restricts the max decimal places to the number given
-    //public class JsonMaxDecimalPlacesAttribute : Attribute
-    //{
-    //    string formatter;
-    //    public JsonMaxDecimalPlacesAttribute(int maxDecimalPlaces) { formatter = string.Format("N{0}", maxDecimalPlaces); }
-    //    public string Convert(decimal value) { return value.ToString(formatter); }
-    //    public string Convert(double value) { return value.ToString(formatter); }
-    //    public string Convert(float value) { return value.ToString(formatter); }
-    //}
 }

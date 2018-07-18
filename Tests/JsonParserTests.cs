@@ -55,7 +55,7 @@ namespace Tests
             Assert.IsTrue(decoded.DecodedMethodCalled);
         }
     }
-    class TestCallbacks
+    class TestCallbacks : IJsonDecoded, IJsonPreEncode, IJsonEncoded
     {
         string name;
         int age;
@@ -72,11 +72,10 @@ namespace Tests
             this.age = age;
         }
 
-        [JsonPreEncode]
-        void OnJsonPreEncode() => PreEncodedMethodCalled = true;
-        [JsonEncoded]
-        void OnJsonEncoded() => EncodedMethodCalled = true;
-        [JsonDecoded]
-        void OnJsonDecoded() => DecodedMethodCalled = true;
+        void IJsonDecoded.OnJsonDecoded() => DecodedMethodCalled = true;
+
+        void IJsonPreEncode.OnJsonPreEncode() => PreEncodedMethodCalled = true;
+
+        void IJsonEncoded.OnJsonEncoded() => EncodedMethodCalled = true;
     }
 }
