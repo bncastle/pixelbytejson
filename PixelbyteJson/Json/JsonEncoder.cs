@@ -58,10 +58,10 @@ namespace Pixelbyte.Json
             EncodeMethod callback = GetTypeEncoder(type);
             if (callback == null)
             {
-                if (type.HasInterface(typeof(IEnumerable)))
-                    callback = GetTypeEncoder(typeof(IEnumerable));
-                else if (type.HasInterface(typeof(IDictionary)))
+                if (type.HasInterface(typeof(IDictionary)))
                     callback = GetTypeEncoder(typeof(IDictionary));
+                else if (type.HasInterface(typeof(IEnumerable)))
+                    callback = GetTypeEncoder(typeof(IEnumerable));
 
                 if (callback == null)
                     callback = defaultTypeEncoder;

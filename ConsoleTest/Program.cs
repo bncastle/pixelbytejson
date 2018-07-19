@@ -15,8 +15,11 @@ namespace Pixelbyte.Json
 
             //JsonParser.Parse(@"{""fixodent"" : true , ""matriark"" : 23.45 }");
 
-            JsonParser.Parse(@"{""Number"" : 908,82f}");
+            JsonParser.Parse(@"{""Number"" : 908.82}");
 
+            Dictionary<string, string> map = new Dictionary<string, string>() { { "less", "more" }, { "bad", "good" }, { "exciting", "boring" } };
+            var f = JsonEncoder.Encode(map, true);
+            Console.WriteLine(f);
             //TestJsonParser();
             //TestDeserialize(); 
 

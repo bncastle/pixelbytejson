@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace Pixelbyte.Json
 {
@@ -202,8 +203,9 @@ namespace Pixelbyte.Json
             int index = offset;
             int bytesRead = 0;
             bool decimalSign = false;
-            long value = 0;
+            decimal value = 0;
             int sign = 1;
+            byte p = 1;
 
             ///TODO: Need to support full number format with eE +-
             ///https://www.json.org/
@@ -236,7 +238,13 @@ namespace Pixelbyte.Json
                 //NOTE: this is used only IF the number is an integer
                 //Convert the byte to an actual number and add it to the current value
                 //long.MinValue causes an overflow so we'll use unchecked here
-                value = unchecked(value * 10 + digit);
+                if (!decimalSign)
+                    value = unchecked(value * 10 + digit);
+                else
+                {
+                    value = unchecked(value + digit * (decimal)Math.Pow(10, -p));
+                    p++;
+                }
                 bytesRead++;
             }
 
@@ -248,10 +256,13 @@ namespace Pixelbyte.Json
                 if (sign == 1)
                     return (ulong)value;
                 else
-                    return value;
+                    return (long)value;
             }
             else
-                return checked(double.Parse(Encoding.UTF8.GetString(bytes, index, bytesRead)));
+            {
+                return checked(sign * value);
+                //return checked(double.Parse(Encoding.UTF8.GetString(bytes, index, bytesRead)));
+            }
         }
 
         public void Throw(string msg) => throw new JSONParserException($"[{Row}:{Column}] {msg}");
