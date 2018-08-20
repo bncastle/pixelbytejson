@@ -228,8 +228,8 @@ namespace Pixelbyte.Json
                 {
                     //Get the underlying type of the Enum (it can be int, uint, ushort, byte, etc)
                     var enumType = Enum.GetUnderlyingType(value.GetType());
-                    var convertedType = Convert.ChangeType(value, enumType);
-                    Number(convertedType);
+                    var convertedNumber = Convert.ChangeType(value, enumType);
+                    Number(convertedNumber);
                 }
             }
             else if (value is char) String(value.ToString());

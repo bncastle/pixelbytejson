@@ -11,6 +11,7 @@ namespace Pixelbyte.Json
         //Signature for all Decode methods
         public delegate object DecodeMethod(Type targetType, JsonObject jsonObj);
 
+        static HashSet<Type> convertableTypes;
         static Dictionary<Type, DecodeMethod> decoders;
         static DecodeMethod defaultDecoder;
         static TypeComparer typeComparer;
@@ -54,6 +55,17 @@ namespace Pixelbyte.Json
 
         static JsonDecoder()
         {
+            convertableTypes = new HashSet<Type>()
+            {
+                typeof(string), typeof(bool),
+                //Signed int
+                typeof(long), typeof(int), typeof(short), typeof(sbyte), 
+                //Unsigned ints
+                typeof(ulong), typeof(uint), typeof(ushort), typeof(byte),
+                //Float values
+                typeof(decimal), typeof(double), typeof(float),
+            };
+
             typeComparer = new TypeComparer();
             decoders = new Dictionary<Type, DecodeMethod>(typeComparer);
 
@@ -82,15 +94,23 @@ namespace Pixelbyte.Json
                 return obj;
             });
 
+            ///My List<> Decoder
             SetDecoder(typeof(IList), (type, jsonObj) =>
             {
                 if (jsonObj == null) throw new ArgumentNullException("jsonObj");
                 if (!jsonObj.IsArray) throw new ArgumentException("jsonObj: Expected a rootArray!");
 
+                IList newList = null;
                 //Get the value type of the generic enumerable
                 Type listElementType = type.GetGenericArguments()[0];
 
-                var newList = Activator.CreateInstance(type, true) as IList;
+                if (type != typeof(IList) && typeof(IList).IsAssignableFrom(type))
+                    newList = Activator.CreateInstance(type, true) as IList;
+                else
+                {
+                    Type genericListType = typeof(List<>).MakeGenericType(listElementType);
+                    newList = Activator.CreateInstance(genericListType) as IList;
+                }
 
                 for (int i = 0; i < jsonObj.rootArray.Count; i++)
                 {
@@ -149,15 +169,15 @@ namespace Pixelbyte.Json
                         }
                         catch (FieldAccessException fae)
                         {
-                            throw new JSONDecodeException($"Unable to access field {field.Name} of type {field.FieldType.FriendlyName()}", fae);
+                            throw new JSONDecodeException($"Unable to access field {field.Name} of type {field.FieldType.FriendlyName()}\n{fae.Message}", fae);
                         }
                         catch (TargetException te)
                         {
-                            throw new JSONDecodeException($"The target object is null for the field {field.Name}!", te);
+                            throw new JSONDecodeException($"The target object is null for the field {field.Name}!\n{te.Message}", te);
                         }
                         catch (Exception e)
                         {
-                            throw new JSONDecodeException($"Unable to decode json name '{jsonName}' of type '{field.FieldType.FriendlyName()}'", e);
+                            throw new JSONDecodeException($"Unable to decode json name '{jsonName}' of type '{field.FieldType.FriendlyName()}'\n{e.Message}", e);
                         }
                     }
                     //else
@@ -220,6 +240,27 @@ namespace Pixelbyte.Json
 
         #region Value Decode Methods
 
+        static object ConvertValue(object value, Type toType)
+        {
+            if (toType == typeof(string)) return value.ToString();
+            else if (toType == typeof(bool)) return Convert.ToBoolean(value);
+            //Signed ints
+            else if (toType == typeof(long)) return Convert.ToInt64(value);
+            else if (toType == typeof(int)) return Convert.ToInt32(value);
+            else if (toType == typeof(short)) return Convert.ToInt16(value);
+            else if (toType == typeof(sbyte)) return Convert.ToSByte(value);
+            //Unsigned ints
+            else if (toType == typeof(ulong)) return Convert.ToUInt64(value);
+            else if (toType == typeof(uint)) return Convert.ToUInt32(value);
+            else if (toType == typeof(ushort)) return Convert.ToUInt16(value);
+            else if (toType == typeof(byte)) return Convert.ToByte(value);
+            //Float values
+            else if (toType == typeof(decimal)) return Convert.ToDecimal(value);
+            else if (toType == typeof(double)) return Convert.ToDouble(value);
+            else if (toType == typeof(float)) return Convert.ToSingle(value);
+            return value;
+        }
+
         static object DecodeValue(object value, Type toType)
         {
             if ((value == null && (toType.IsClass || toType.IsInterface)) ||
@@ -236,45 +277,26 @@ namespace Pixelbyte.Json
                     return decoder(toType, childObj);
                 }
                 else
-                    return Decode(childObj, toType);
+                {
+                    var decoder = GetDecoder(toType);
+                    if (decoder != null)
+                    {
+                        return decoder(toType, childObj);
+                    }
+                    else
+                        return Decode(childObj, toType);
+                }
             }
-            else if (toType == typeof(string))
-                value = value.ToString();
-            else if (toType == typeof(bool))
-                value = Convert.ToBoolean(value);
-            //Signed ints
-            else if (toType == typeof(Int64))
-                value = Convert.ToInt64(value);
-            else if (toType == typeof(Int32))
-                value = Convert.ToInt32(value);
-            else if (toType == typeof(Int16))
-                value = Convert.ToInt16(value);
-            else if (toType == typeof(SByte))
-                value = Convert.ToSByte(value);
-            //Unsigned ints
-            else if (toType == typeof(UInt64))
-                value = Convert.ToUInt64(value);
-            else if (toType == typeof(UInt32))
-                value = Convert.ToUInt32(value);
-            else if (toType == typeof(UInt16))
-                value = Convert.ToUInt16(value);
-            else if (toType == typeof(Byte))
-                value = Convert.ToByte(value);
-            //Float values
-            else if (toType == typeof(Decimal))
-                value = Convert.ToDecimal(value);
-            else if (toType == typeof(Double))
-                value = Convert.ToDouble(value);
-            else if (toType == typeof(Single))
-                value = Convert.ToSingle(value);
+            else if (convertableTypes.Contains(toType))
+                return ConvertValue(value, toType);
             else if (toType.IsEnum)
             {
                 //parse an enum from a string
                 if (value is string)
-                    value = Enum.Parse(toType, value.ToString());
+                    return Enum.Parse(toType, value.ToString());
                 else
                     //To parse an enum from a number
-                    value = Enum.ToObject(toType, value);
+                    return Enum.ToObject(toType, value);
             }
             else if (toType == typeof(DateTime))
             {
@@ -297,7 +319,10 @@ namespace Pixelbyte.Json
                     decoder = GetDecoderOrDefault(toType);
                 return decoder(toType, new JsonObject(childObj));
             }
-            return value;
+            else if (toType.IsAssignableFrom(value.GetType()))
+                return value;
+            else
+                throw new JSONDecodeException($"Unable to decode type: '{toType.FriendlyName()}' from {value}");
         }
         #endregion
     }
